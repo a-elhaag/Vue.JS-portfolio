@@ -74,6 +74,12 @@ const socials = computed(() => {
 
         <!-- CTAs -->
         <div class="welcome-cta">
+          <Button
+            variant="solid"
+            :href="`mailto:${welcome.contacts.email}`"
+            aria-label="Contact Me"
+            >Email Me</Button
+          >
           <Button variant="animated" aria-label="Explore">
             <template #icon>
               <ArrowDown />
