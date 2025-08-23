@@ -1,56 +1,45 @@
-<!-- src/components/Card.vue -->
 <script setup lang="ts">
 import { computed } from "vue";
 import { Icon } from "@iconify/vue";
+import Button from "./Button.vue";
 
+type Kind = "cert" | "badge" | "achievement";
 type Variant = "elevated" | "outline" | "solid" | "glass";
 type Size = "sm" | "md" | "lg";
 type Orientation = "vertical" | "horizontal";
 
 const props = withDefaults(
   defineProps<{
-    /** Visual variant */
-    variant?: Variant;
-    /** Density */
-    size?: Size;
-    /** Vertical (default) or horizontal media+content layout */
-    orientation?: Orientation;
-    /** Make the whole card clickable */
+    kind?: Kind;
     href?: string;
-    external?: boolean;
-    /** Subtle interactivity (lift + glow) */
+    variant?: Variant;
+    size?: Size;
+    orientation?: Orientation;
     interactive?: boolean;
-    /** Optional accent color for borders/accents/chips */
     accent?: string;
-    /** Optional media iconify token (or provide via slot) */
-    mediaIcon?: string;
-    /** Optional media image src (or provide via slot) */
-    mediaImg?: string;
-    /** Rounded corners toggle (kept simple for reuse) */
     rounded?: boolean;
-    /** Disabled look (for upcoming items) */
     disabled?: boolean;
-    /** ARIA label if the whole card is a link/button */
+    mediaIcon?: string;
+    mediaImg?: string;
     ariaLabel?: string;
+    typeText?: string;
+    clamp?: number;
+    autoView?: boolean;
+    viewLabel?: string;
   }>(),
   {
     variant: "elevated",
     size: "md",
     orientation: "vertical",
-    external: false,
     interactive: true,
     rounded: true,
     disabled: false,
+    clamp: 4,
+    autoView: true,
+    viewLabel: "View",
   }
 );
 
-const isLink = computed(() => !!props.href);
-const target = computed(() => (props.external ? "_blank" : undefined));
-const rel = computed(() =>
-  props.external ? "noopener noreferrer" : undefined
-);
-
-/** Classes composed from props */
 const classes = computed(() => [
   "card",
   `v-${props.variant}`,
@@ -63,27 +52,31 @@ const classes = computed(() => [
   },
 ]);
 
-/** CSS vars exposed to style layer */
 const styleVars = computed(() => ({
   "--accent": props.accent || "var(--glow)",
+  "--body-clamp": String(props.clamp),
 }));
+
+const resolvedTypeText = computed(() => {
+  if (props.typeText) return props.typeText;
+  if (props.kind === "cert") return "Certification";
+  if (props.kind === "badge") return "Badge";
+  if (props.kind === "achievement") return "Achievement";
+  return undefined;
+});
+
+const shouldRenderAutoView = computed(
+  () =>
+    props.autoView &&
+    (props.kind === "cert" || props.kind === "badge") &&
+    !!props.href
+);
 </script>
 
 <template>
-  <component
-    :is="isLink ? 'a' : 'div'"
-    :href="href"
-    :target="target"
-    :rel="rel"
-    :class="classes"
-    :style="styleVars"
-    :aria-label="ariaLabel"
-    :tabindex="isLink ? undefined : 0"
-  >
-    <!-- Optional ribbon/badge (e.g., "NEW", "Top 1%") -->
-    <div class="ribbon"><slot name="ribbon" /></div>
+  <div :class="classes" :style="styleVars" :aria-label="ariaLabel" tabindex="0">
+    <div v-if="$slots.ribbon" class="ribbon"><slot name="ribbon" /></div>
 
-    <!-- Media -->
     <div class="media" v-if="$slots.media || mediaIcon || mediaImg">
       <slot name="media">
         <img v-if="mediaImg" :src="mediaImg" alt="" class="media-img" />
@@ -91,56 +84,86 @@ const styleVars = computed(() => ({
       </slot>
     </div>
 
-    <!-- Content -->
     <div class="content">
-      <!-- Header: title + meta -->
       <header class="header">
         <div class="title-wrap">
-          <!-- Monospace heading by design -->
           <h3 class="title"><slot name="title" /></h3>
           <div class="subtitle"><slot name="subtitle" /></div>
         </div>
-        <div class="meta"><slot name="meta" /></div>
+        <div class="meta">
+          <span v-if="resolvedTypeText" class="type-pill">{{
+            resolvedTypeText
+          }}</span>
+          <slot name="meta" />
+        </div>
       </header>
 
-      <!-- Body -->
-      <div class="body">
-        <slot />
-      </div>
+      <div class="body"><slot /></div>
 
-      <!-- Tags / Chips -->
-      <div v-if="$slots.tags" class="tags">
-        <slot name="tags" />
-      </div>
-
-      <!-- Footer (actions, dates, links) -->
       <footer class="footer">
-        <slot name="footer" />
+        <slot name="footer">
+          <Button
+            v-if="shouldRenderAutoView"
+            variant="animated"
+            size="md"
+            :href="href"
+            external
+            aria-label="View verification"
+          >
+            <template #icon>
+              <span class="link-icn">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M7 17L17 7M7 7h10v10"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </span>
+            </template>
+            {{ viewLabel }}
+          </Button>
+        </slot>
       </footer>
     </div>
-  </component>
+  </div>
 </template>
 
 <style scoped>
-/* Base shell */
+/* Fixed sizes (constant height) */
+.s-sm {
+  --card-h: 14.5rem;
+}
+.s-md {
+  --card-h: 16.5rem;
+}
+.s-lg {
+  --card-h: 19rem;
+}
+
+/* Shell */
 .card {
   position: relative;
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
-
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-
   border-radius: 1rem;
   padding: 1.2rem;
-  text-decoration: none; /* if <a> */
-
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease,
-    opacity 0.18s ease;
+  height: var(--card-h);
+  overflow: hidden;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s,
+    border-color 0.18s, background 0.18s, opacity 0.18s;
   outline: none;
 }
 .is-rounded {
@@ -179,34 +202,13 @@ const styleVars = computed(() => ({
   border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
 }
 
-/* Sizes */
-.s-sm {
-  padding: 0.9rem;
-}
-.s-lg {
-  padding: 1.4rem;
-}
-
 /* Orientation */
-.o-vertical .media {
-  order: 0;
-}
-.o-vertical .content {
-  order: 1;
-}
-
 .o-horizontal {
   grid-template-columns: auto 1fr;
   align-items: center;
 }
-.o-horizontal .media {
-  order: 0;
-}
-.o-horizontal .content {
-  order: 1;
-}
 
-/* Media defaults */
+/* Media */
 .media {
   display: grid;
   place-items: center;
@@ -228,7 +230,6 @@ const styleVars = computed(() => ({
 .media-ico {
   color: var(--accent);
 }
-
 .is-interactive:hover .media {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
@@ -236,7 +237,7 @@ const styleVars = computed(() => ({
     0 0 1.4rem 0.25rem color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
-/* Ribbon (optional top-left badge) */
+/* Ribbon only when provided */
 .ribbon {
   position: absolute;
   top: 0.6rem;
@@ -250,12 +251,13 @@ const styleVars = computed(() => ({
   border-radius: 999px;
 }
 
-/* Content layout */
+/* Content: header | body (fill) | footer pinned */
 .content {
   display: grid;
+  grid-template-rows: auto 1fr auto;
   gap: 0.75rem;
+  min-height: calc(var(--card-h) - 2.4rem);
 }
-
 .header {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -267,7 +269,7 @@ const styleVars = computed(() => ({
   gap: 0.2rem;
 }
 
-/* Monospace headings — per your requirement */
+/* Monospace heading */
 .title {
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
     "Liberation Mono", monospace;
@@ -280,60 +282,51 @@ const styleVars = computed(() => ({
   font-size: 0.92rem;
   color: var(--muted);
 }
+
+/* Meta */
 .meta {
   display: inline-flex;
   gap: 0.5rem;
   align-items: center;
+  white-space: nowrap;
   color: var(--muted);
   font-size: 0.88rem;
-  white-space: nowrap;
+}
+.type-pill {
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  padding: 0.14rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--text);
 }
 
-/* Body text */
+/* Body clamp = consistent heights */
 .body {
   color: var(--text);
   font-size: 0.96rem;
   line-height: 1.45;
-}
-
-/* Tags / chips slot styling baseline */
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-.tags :deep(.chip) {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.22rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  font-size: 0.84rem;
-  color: var(--text);
-}
-.tags :deep(.chip .ico) {
-  width: 1rem;
-  height: 1rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
 }
 
 /* Footer */
 .footer {
   display: flex;
-  justify-content: flex-start;
   align-items: center;
   gap: 0.6rem;
 }
 
-/* Focus ring for keyboard users */
-.card:focus-visible {
-  box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--accent) 40%, transparent),
-    0 0 0 0.36rem color-mix(in srgb, var(--accent) 18%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+/* Inline SVG safety */
+.link-icn :deep(svg) {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
-/* Mobile polish: reduce gaps a touch */
+/* Mobile */
 @media (max-width: 719.98px) {
   .card {
     padding: 1rem;
