@@ -232,4 +232,5 @@ const target = computed(() => (props.external ? "_blank" : undefined));
   opacity: 1;
   transform: translateY(-50%) translateX(0);
 }
+
 </style>

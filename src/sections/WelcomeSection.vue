@@ -2,8 +2,7 @@
 import { computed } from "vue";
 import { welcome } from "../data/welcome";
 import { Github, Linkedin, X } from "lucide-vue-next";
-import Button from "../components/UI/Button.vue";
-import { ArrowDown } from "lucide-vue-next";
+import Button from "../components/Button.vue";
 
 // Prefer URL from welcome.ts; fallback to bundled svg
 const fallbackAvatar = new URL("../assets/avatar.svg", import.meta.url).href;
@@ -80,12 +79,6 @@ const socials = computed(() => {
             aria-label="Contact Me"
             >Email Me</Button
           >
-          <Button variant="animated" aria-label="Explore">
-            <template #icon>
-              <ArrowDown />
-            </template>
-            Explore
-          </Button>
         </div>
       </div>
     </div>
@@ -98,6 +91,7 @@ const socials = computed(() => {
   width: 100%;
   padding: 56px 0 32px 0;
   margin-top: 10rem;
+  margin-bottom: 10rem;
   background: var(--bg);
   display: flex;
   justify-content: center;
