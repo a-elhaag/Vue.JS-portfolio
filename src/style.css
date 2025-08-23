@@ -1,13 +1,22 @@
+/* Make all heading tags monospace */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
 :root {
   --bg: #ffffff;
   --surface: #ffffff;
   --text: #111111;
   --muted: #555555;
   --border: #e2e2e2;
-  --glow: #2f6bed; 
+  --glow: #2f6bed;
   --glow-intensity: 0.55;
 
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
   --font-heading: monospace;
 }
 

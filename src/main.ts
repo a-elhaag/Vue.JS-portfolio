@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import { welcome } from "./data/welcome";
-import "./styles/base.css";
+import "./style.css";
 
 const app = createApp(App);
 
