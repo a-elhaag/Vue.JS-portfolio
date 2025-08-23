@@ -97,6 +97,7 @@ const socials = computed(() => {
 .welcome-hero {
   width: 100%;
   padding: 56px 0 32px 0;
+  margin-top: 10rem;
   background: var(--bg);
   display: flex;
   justify-content: center;
