@@ -4,17 +4,21 @@ import { welcome } from '../data/welcome'
 import { Github, Linkedin, X } from 'lucide-vue-next'
 import Button from '../components/UI/Button.vue'
 
-const avatarSvg = new URL('../assets/avatar.svg', import.meta.url).href
-const initial = (welcome.name || 'A').slice(0,1).toUpperCase()
+// Prefer URL from welcome.ts; fallback to bundled svg
+const fallbackAvatar = new URL('../assets/avatar.svg', import.meta.url).href
+const avatarSrc = computed(() => welcome.avatar?.src || fallbackAvatar)
 
-// map known socials -> lucide icon
+// Initial fallback letter
+const initial = (welcome.name || 'A').slice(0, 1).toUpperCase()
+
+// Map known social keys to lucide icons
 const iconMap = {
   github: Github,
   linkedin: Linkedin,
   x: X,
 } as const
 
-// respect welcome.style.order and filter only those with URLs present
+// Respect welcome.style.order and only include socials that have URLs
 const defaultOrder: Array<keyof typeof iconMap> = ['github', 'linkedin', 'x']
 
 const socials = computed(() => {
@@ -27,38 +31,40 @@ const socials = computed(() => {
       icon: iconMap[key],
     }))
 })
-// map welcome.style.socialVariant -> Button size
-const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm' : 'md')
+// Map welcome.style.socialVariant -> Button size
+const socialSize = computed(() => (welcome.style?.socialVariant === 'mini' ? 'sm' : 'md'))
 </script>
 
 <template>
   <section id="welcome" class="welcome-hero">
     <div class="welcome-content">
-      <!-- Avatar with glow behind it -->
+      <!-- Avatar with glow -->
       <div class="welcome-avatar">
         <img
-          v-if="welcome.avatar?.src"
-          :src="welcome.avatar.src"
+          v-if="avatarSrc"
+          :src="avatarSrc"
           :alt="welcome.avatar?.alt || ('Portrait of ' + welcome.name)"
           class="avatar-img"
         />
-        <img v-else :src="avatarSvg" alt="Avatar" class="avatar-img" />
-        <div v-if="!welcome.avatar?.src && !avatarSvg" class="avatar-fallback">{{ initial }}</div>
+        <div v-if="!avatarSrc" class="avatar-fallback">{{ initial }}</div>
       </div>
 
       <div class="welcome-text">
         <h1 class="welcome-name">{{ welcome.name }}</h1>
         <p class="welcome-headline">{{ welcome.headline }}</p>
-        <p class="welcome-intro">{{ Array.isArray(welcome.intro) ? welcome.intro[0] : welcome.intro }}</p>
+        <p class="welcome-intro">
+          {{ Array.isArray(welcome.intro) ? welcome.intro[0] : welcome.intro }}
+        </p>
 
+        <!-- Social icons -->
         <div v-if="socials.length" class="welcome-socials">
           <Button
             v-for="s in socials"
             :key="s.key"
             :href="s.url"
             variant="social"
-            :aria-label="s.key"
             :size="socialSize"
+            :aria-label="s.key"
             external
           >
             <template #icon>
@@ -67,6 +73,7 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
           </Button>
         </div>
 
+        <!-- CTAs -->
         <div class="welcome-cta">
           <Button
             v-if="welcome.cta.contactMe && welcome.contacts.email"
@@ -91,6 +98,7 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
 </template>
 
 <style scoped>
+/* Layout only; all button/icon visuals live in Button.vue */
 .welcome-hero {
   width: 100%;
   padding: 56px 0 32px 0;
@@ -98,7 +106,6 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
   display: flex;
   justify-content: center;
 }
-
 .welcome-content {
   width: min(900px, 96vw);
   display: flex;
@@ -106,7 +113,6 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
   align-items: center;
   gap: 32px;
 }
-
 .welcome-text {
   display: flex;
   flex-direction: column;
@@ -114,7 +120,6 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
   text-align: center;
   gap: 18px;
 }
-
 .welcome-name {
   font-size: clamp(2.2rem, 5vw, 3.2rem);
   font-weight: 800;
@@ -122,14 +127,12 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
   color: var(--text);
   margin-bottom: 0.2em;
 }
-
 .welcome-headline {
   font-size: 1.25rem;
   color: var(--muted);
   font-weight: 500;
   margin-bottom: 0.2em;
 }
-
 .welcome-intro {
   font-size: 1.1rem;
   color: var(--text);
@@ -137,7 +140,7 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
   margin-bottom: 0.5em;
 }
 
-/* Avatar with glow behind it (no color change, soft halo using --glow) */
+/* Avatar with soft glow halo using --glow; no color flip */
 .welcome-avatar {
   width: 180px;
   height: 180px;
@@ -155,7 +158,6 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
     0 0 36px 12px color-mix(in oklab, var(--glow) 55%, transparent),
     0 0 64px 24px color-mix(in oklab, var(--glow) 30%, transparent);
 }
-
 .avatar-img {
   width: 100%;
   height: 100%;
@@ -165,15 +167,20 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
   position: relative;
   z-index: 2;
 }
-
 .avatar-fallback {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 3.5rem; font-weight: 800;
-  color: var(--bg); background: transparent; z-index: 1;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--bg);
+  background: transparent;
+  z-index: 1;
 }
 
-/* Layout only (no button/icon styles live here) */
+/* Simple layout spacing for controls */
 .welcome-socials { display: flex; gap: 18px; margin: 10px 0 0 0; }
 .welcome-cta { display: flex; gap: 14px; margin-top: 18px; }
 
@@ -185,13 +192,23 @@ const socialSize = computed(() => welcome.style?.socialVariant === 'mini' ? 'sm'
 }
 @media (min-width: 800px) {
   .welcome-content {
-    flex-direction: row; align-items: center; justify-content: space-between; gap: 48px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
   }
   .welcome-text {
-    align-items: flex-start; text-align: left; flex: 1 1 0%; order: 1;
+    align-items: flex-start;
+    text-align: left;
+    flex: 1 1 0%;
+    order: 1;
   }
   .welcome-avatar {
-    width: 240px; height: 240px; min-width: 240px; min-height: 240px; order: 2;
+    width: 240px;
+    height: 240px;
+    min-width: 240px;
+    min-height: 240px;
+    order: 2;
   }
 }
 </style>

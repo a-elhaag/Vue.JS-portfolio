@@ -6,6 +6,9 @@
   --border: #e2e2e2;
   --glow: #2f6bed; 
   --glow-intensity: 0.55;
+
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-heading: monospace;
 }
 
 * {
@@ -15,8 +18,30 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-body);
   background-color: var(--bg);
   color: var(--text);
   line-height: 1.5;
+}
+
+/* Headings */
+.h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text);
+  font-family: var(--font-heading);
+}
+
+.h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-heading);
+}
+
+.h3 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-heading);
 }
