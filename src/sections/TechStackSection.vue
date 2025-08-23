@@ -1,36 +1,96 @@
-<!-- src/sections/TechStackSection.vue -->
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, nextTick } from "vue";
+import {
+  ref,
+  reactive,
+  computed,
+  onMounted,
+  nextTick,
+  onBeforeUnmount,
+} from "vue";
 import TechCard from "../components/TechCard.vue";
 import Button from "../components/Button.vue";
 import { techStack, type TechItem } from "../data/techStack";
-import { ChevronDown, ChevronUp } from "lucide-vue-next";
+import { RotateCcw, ChevronDown, ChevronUp } from "lucide-vue-next";
 
-/* Desktop-only drag (hover+fine pointer) */
+/** Desktop detection: enable drag only on hover-capable, fine-pointer devices */
 const isDesktop = ref(false);
-onMounted(() => {
+function updateDesktopFlag() {
   const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-  const apply = () => (isDesktop.value = mq.matches);
-  apply();
-  mq.addEventListener?.("change", apply);
+  isDesktop.value = mq.matches;
+}
+onMounted(() => {
+  updateDesktopFlag();
+  window.addEventListener("resize", updateDesktopFlag, { passive: true });
 });
+onBeforeUnmount(() => window.removeEventListener("resize", updateDesktopFlag));
 
-/* Data */
+/** Data */
 const items = ref<TechItem[]>(techStack.slice());
-
-
-/* Collapse long lists — MOBILE ONLY */
-const COLLAPSE_AT_MOBILE = 6;
-const showAll = ref(false);
-const canCollapseMobile = computed(
-  () => !isDesktop.value && items.value.length > COLLAPSE_AT_MOBILE
-);
-const visible = computed(() => {
-  if (isDesktop.value) return items.value;
-  return showAll.value ? items.value : items.value.slice(0, COLLAPSE_AT_MOBILE);
+const originalIds = techStack.map((t) => t.id);
+const orderChanged = computed(() => {
+  const ids = items.value.map((i) => i.id);
+  if (ids.length !== originalIds.length) return true;
+  for (let i = 0; i < ids.length; i++)
+    if (ids[i] !== originalIds[i]) return true;
+  return false;
 });
 
-/* Drag (desktop) — smoothed lerp (no vibration) */
+/** Collapsed views:
+ *  - Mobile: first 2 items
+ *  - Desktop: first 3 rows (columns auto-detected from computed grid template)
+ */
+const showAll = ref(false);
+const COLLAPSE_AT_MOBILE = 2;
+
+const gridEl = ref<HTMLElement | null>(null);
+const desktopCols = ref(0); // computed from grid-template-columns
+
+function measureCols() {
+  const el = gridEl.value;
+  if (!el) return;
+  const style = getComputedStyle(el);
+  const tpl = style.gridTemplateColumns || "";
+  // Count tracks in the resolved grid template (e.g., "286px 286px 286px")
+  let count = tpl.split(" ").filter(Boolean).length;
+  // Fallback heuristic if the browser returns "none"
+  if (!count) {
+    const approxColWidth = 176; // ≈ 11rem card + gap
+    count = Math.max(1, Math.floor(el.clientWidth / approxColWidth));
+  }
+  desktopCols.value = count;
+}
+
+let ro: ResizeObserver | null = null;
+onMounted(() => {
+  measureCols();
+  ro = new ResizeObserver(() => measureCols());
+  if (gridEl.value) ro.observe(gridEl.value);
+  window.addEventListener("resize", measureCols, { passive: true });
+});
+onBeforeUnmount(() => {
+  if (ro && gridEl.value) ro.unobserve(gridEl.value);
+  window.removeEventListener("resize", measureCols);
+});
+
+const collapsedDesktopCount = computed(() =>
+  Math.max(0, desktopCols.value * 3)
+);
+const canCollapse = computed(() => {
+  if (isDesktop.value) return items.value.length > collapsedDesktopCount.value;
+  return items.value.length > COLLAPSE_AT_MOBILE;
+});
+
+const visible = computed(() => {
+  if (showAll.value) return items.value;
+  if (isDesktop.value)
+    return items.value.slice(
+      0,
+      collapsedDesktopCount.value || items.value.length
+    );
+  return items.value.slice(0, COLLAPSE_AT_MOBILE);
+});
+
+/** Drag & Drop (desktop): smooth, no vibration (LERP to cursor), ghost snaps in */
 const cardEls = ref<HTMLElement[]>([]);
 function setCardRef(el: Element | null, i: number) {
   if (el) cardEls.value[i] = el as HTMLElement;
@@ -44,10 +104,10 @@ const drag = reactive({
   x: 0,
   y: 0, // drawn position
   tx: 0,
-  ty: 0, // target position
+  ty: 0, // target position (cursor - offset)
   ox: 0,
-  oy: 0, // offset inside card
-  raf: 0,
+  oy: 0, // pickup offset inside card
+  raf: 0 as number,
 });
 
 function onMouseDown(e: MouseEvent, index: number) {
@@ -83,7 +143,7 @@ function onMouseMove(e: MouseEvent) {
   drag.tx = e.clientX - drag.ox;
   drag.ty = e.clientY - drag.oy;
 
-  // nearest visible slot
+  // Nearest slot among currently visible cards
   let nearest = -1,
     best = Infinity;
   const n = visible.value.length;
@@ -102,10 +162,9 @@ function onMouseMove(e: MouseEvent) {
   drag.overIndex = nearest;
 }
 
-/* Smooth follow (lerp) */
 function step() {
   if (!drag.active || !drag.ghost) return;
-  const a = 0.25;
+  const a = 0.25; // smoothing factor; higher = snappier
   drag.x += (drag.tx - drag.x) * a;
   drag.y += (drag.ty - drag.y) * a;
   drag.ghost.style.transform = `translate3d(${drag.x}px, ${drag.y}px, 0) scale(1.03)`;
@@ -117,7 +176,7 @@ async function onMouseUp() {
   cancelAnimationFrame(drag.raf);
 
   const from = drag.index;
-  let to = drag.overIndex >= 0 ? drag.overIndex : from;
+  const to = drag.overIndex >= 0 ? drag.overIndex : from;
 
   if (to !== from) {
     const next = items.value.slice();
@@ -148,8 +207,12 @@ async function onMouseUp() {
   window.removeEventListener("mousemove", onMouseMove);
   window.removeEventListener("mouseup", onMouseUp);
 }
-/* Mobile-only toggle label */
-const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
+
+/** Controls */
+function snapBack() {
+  items.value = techStack.slice();
+}
+const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
 </script>
 
 <template>
@@ -160,9 +223,30 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
           <h2 class="title">Tech Stack</h2>
           <p class="subtitle">Tools I actually ship with.</p>
         </div>
+
+        <!-- Desktop only: show Reset button when order changed -->
+        <div class="controls" v-if="isDesktop && orderChanged">
+          <Button
+            variant="animated"
+            size="md"
+            @click="snapBack"
+            aria-label="Reset order"
+          >
+            <template #icon>
+              <!-- Wrap to avoid global fill rules turning strokes into blobs -->
+              <span class="reset-icn"><RotateCcw /></span>
+            </template>
+            Reset
+          </Button>
+        </div>
       </header>
 
-      <div class="grid" :data-desktop="isDesktop" :data-dragging="drag.active">
+      <div
+        ref="gridEl"
+        class="grid"
+        :data-desktop="isDesktop"
+        :data-dragging="drag.active"
+      >
         <div
           v-for="(t, i) in visible"
           :key="t.id"
@@ -176,7 +260,7 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
             :ref="(el) => setCardRef(el as Element, i)"
             @mousedown="onMouseDown($event, i)"
           >
-            <!-- drag indicator (desktop) -->
+            <!-- subtle drag indicator (desktop only) -->
             <div v-if="isDesktop" class="handle" aria-hidden="true">
               <span class="dot"></span><span class="dot"></span
               ><span class="dot"></span>
@@ -187,8 +271,8 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
         </div>
       </div>
 
-      <!-- Mobile-only "Show more/less" -->
-      <div v-if="canCollapseMobile" class="more-wrap">
+      <!-- Show more/less (both mobile and desktop, gated by canCollapse) -->
+      <div v-if="canCollapse" class="more-wrap">
         <Button
           variant="animated"
           size="md"
@@ -198,7 +282,7 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
           <template #icon>
             <component :is="showAll ? ChevronUp : ChevronDown" />
           </template>
-          {{ moreLabel }}
+          {{ toggleLabel }}
         </Button>
       </div>
     </div>
@@ -220,13 +304,12 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   flex-direction: column;
   gap: 20px;
   position: relative;
-  /* add horizontal padding/margins for small screens */
-  padding-inline: 12px;
+  padding-inline: 12px; /* comfy phone edges */
 }
 @media (min-width: 720px) {
   .container {
     padding-inline: 0;
-  } /* desktop uses intrinsic 96vw margin */
+  }
 }
 
 .header {
@@ -257,8 +340,8 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
 }
 
 /* Grid:
-   - Phones: 2 columns, tighter gap and inner padding for breathing room
-   - Desktop: responsive auto-fill
+   - Phones: 2 columns
+   - Desktop: responsive autofill
 */
 .grid {
   display: grid;
@@ -272,7 +355,7 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   }
 }
 
-/* Slot + highlight */
+/* Slots + highlight */
 .slot {
   position: relative;
   transition: outline 0.16s ease, background 0.16s ease;
@@ -284,7 +367,7 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   border-radius: 18px;
 }
 
-/* Card shell (drag target) */
+/* Card shell is the drag target */
 .card-shell {
   position: relative;
   touch-action: manipulation;
@@ -296,14 +379,14 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   cursor: grabbing;
 }
 
-/* While dragging, freeze hover transitions for smoothness */
+/* Freeze hover during drag to avoid jank */
 .grid[data-dragging="true"] :deep(.card) {
   transition: none !important;
   transform: none !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
 }
 
-/* Drag indicator (desktop) */
+/* Drag indicator (desktop only) */
 .handle {
   position: absolute;
   top: 8px;
@@ -319,14 +402,14 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   background: currentColor;
 }
 
-/* Mobile-only "Show more" row */
+/* Show more/less row */
 .more-wrap {
   display: flex;
   justify-content: center;
   margin-top: 12px;
 }
 
-/* Ghost element */
+/* Ghost element (rendered in body) */
 .drag-ghost {
   position: fixed;
   left: 0;
@@ -342,38 +425,35 @@ const moreLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   will-change: transform;
 }
 
-/* ——— Phone-specific downsizing of card internals ——— */
+/* Only this reset icon: force strokes (prevents "blob" when global fill rules exist) */
+.reset-icn :deep(svg) {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Phone downsizing for cards (matches your earlier ask) */
 @media (max-width: 719.98px) {
-  /* slightly smaller cards on phones */
   .grid {
     gap: 12px;
   }
   .slot :deep(.card) {
-    padding: 12px; /* was 16px */
-    min-height: 7.2rem; /* was 8.4rem */
-    border-radius: 14px; /* subtle shrink */
+    padding: 14px;
+    min-height: 7.4rem;
+    border-radius: 14px;
   }
   .slot :deep(.icon-wrap) {
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 2.7rem;
+    height: 2.7rem;
     border-radius: 10px;
   }
   .slot :deep(.icon) {
-    width: 1.4rem;
-    height: 1.4rem;
+    width: 1.5rem;
+    height: 1.5rem;
   }
   .slot :deep(.label) {
     font-size: 0.92rem;
-  }
-}
-@media (max-width: 719.98px) {
-  /* remove hover glow/tilt on phones */
-  .card:hover,
-  .card:hover .icon-wrap {
-    transform: none !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
-    border-color: var(--border) !important;
-    background: var(--surface) !important;
   }
 }
 </style>
