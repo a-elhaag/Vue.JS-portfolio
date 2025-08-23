@@ -221,7 +221,7 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
       <header class="header">
         <div class="titles">
           <h2 class="title">Tech Stack</h2>
-          <p class="subtitle">Tools I actually ship with.</p>
+          <p class="subtitle">Just Drag & Drop.</p>
         </div>
 
         <!-- Desktop only: show Reset button when order changed -->
@@ -332,7 +332,8 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
 }
 .subtitle {
   font-size: 1rem;
-  color: var(--muted);
+  color: var(--glow);
+  font-weight: 500;
 }
 .controls {
   display: flex;

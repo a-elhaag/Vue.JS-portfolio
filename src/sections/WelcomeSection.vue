@@ -91,7 +91,7 @@ const socials = computed(() => {
   width: 100%;
   padding: 56px 0 32px 0;
   margin-top: 10rem;
-  margin-bottom: 10rem;
+  margin-bottom: 5rem;
   background: var(--bg);
   display: flex;
   justify-content: center;
