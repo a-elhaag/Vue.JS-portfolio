@@ -1,5 +1,10 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
+import { createApp } from "vue";
+import App from "./App.vue";
+import { welcome } from "./data/welcome";
 
-createApp(App).mount('#app')
+const app = createApp(App);
+
+// set the document title from welcome.ts
+document.title = welcome.name;
+
+app.mount("#app");

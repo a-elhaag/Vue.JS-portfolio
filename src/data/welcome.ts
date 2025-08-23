@@ -5,6 +5,7 @@ export const welcome = {
     "Software engineering student and AI engineer.",
     "Focused on Vue 3 + TypeScript, Azure, and fast, accessible UIs."
   ],
+  
   contacts: {
     email: "you@example.com"
   },
@@ -22,7 +23,7 @@ export const welcome = {
     letsTalk: true
   },
   avatar: {
-    src: "",
+    src: "src/assets/avatar.svg",
     alt: "Portrait of Anas"
   }
 } as const
