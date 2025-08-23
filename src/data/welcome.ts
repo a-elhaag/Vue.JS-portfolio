@@ -1,5 +1,5 @@
 export const welcome = {
-  name: "Anas",
+  name: "Anas Abuelhaag",
   headline: "I build intelligent systems with code and cloud.",
   intro: [
     "Software engineering student and AI engineer.",
@@ -15,7 +15,6 @@ export const welcome = {
     x: "https://x.com/anas_handle",
   },
   style: {
-    socialVariant: "mini",
     order: ["github", "x", "linkedin"]
   },
   cta: {

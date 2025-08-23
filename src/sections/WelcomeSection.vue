@@ -1,38 +1,38 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { welcome } from '../data/welcome'
-import { Github, Linkedin, X } from 'lucide-vue-next'
-import Button from '../components/UI/Button.vue'
+import { computed } from "vue";
+import { welcome } from "../data/welcome";
+import { Github, Linkedin, X } from "lucide-vue-next";
+import Button from "../components/UI/Button.vue";
+import { ArrowDown } from "lucide-vue-next";
 
 // Prefer URL from welcome.ts; fallback to bundled svg
-const fallbackAvatar = new URL('../assets/avatar.svg', import.meta.url).href
-const avatarSrc = computed(() => welcome.avatar?.src || fallbackAvatar)
+const fallbackAvatar = new URL("../assets/avatar.svg", import.meta.url).href;
+const avatarSrc = computed(() => welcome.avatar?.src || fallbackAvatar);
 
 // Initial fallback letter
-const initial = (welcome.name || 'A').slice(0, 1).toUpperCase()
+const initial = (welcome.name || "A").slice(0, 1).toUpperCase();
 
 // Map known social keys to lucide icons
 const iconMap = {
   github: Github,
   linkedin: Linkedin,
   x: X,
-} as const
+} as const;
 
 // Respect welcome.style.order and only include socials that have URLs
-const defaultOrder: Array<keyof typeof iconMap> = ['github', 'linkedin', 'x']
+const defaultOrder: Array<keyof typeof iconMap> = ["github", "linkedin", "x"];
 
 const socials = computed(() => {
-  const order = welcome.style?.order ?? defaultOrder
+  const order = welcome.style?.order ?? defaultOrder;
   return order
-    .filter(key => welcome.socials[key as keyof typeof welcome.socials])
-    .map(key => ({
+    .filter((key) => welcome.socials[key as keyof typeof welcome.socials])
+    .map((key) => ({
       key,
       url: welcome.socials[key as keyof typeof welcome.socials] as string,
       icon: iconMap[key],
-    }))
-})
+    }));
+});
 // Map welcome.style.socialVariant -> Button size
-const socialSize = computed(() => (welcome.style?.socialVariant === 'mini' ? 'sm' : 'md'))
 </script>
 
 <template>
@@ -43,7 +43,7 @@ const socialSize = computed(() => (welcome.style?.socialVariant === 'mini' ? 'sm
         <img
           v-if="avatarSrc"
           :src="avatarSrc"
-          :alt="welcome.avatar?.alt || ('Portrait of ' + welcome.name)"
+          :alt="welcome.avatar?.alt || 'Portrait of ' + welcome.name"
           class="avatar-img"
         />
         <div v-if="!avatarSrc" class="avatar-fallback">{{ initial }}</div>
@@ -63,7 +63,6 @@ const socialSize = computed(() => (welcome.style?.socialVariant === 'mini' ? 'sm
             :key="s.key"
             :href="s.url"
             variant="social"
-            :size="socialSize"
             :aria-label="s.key"
             external
           >
@@ -75,21 +74,11 @@ const socialSize = computed(() => (welcome.style?.socialVariant === 'mini' ? 'sm
 
         <!-- CTAs -->
         <div class="welcome-cta">
-          <Button
-            v-if="welcome.cta.contactMe && welcome.contacts.email"
-            :href="`mailto:${welcome.contacts.email}`"
-            variant="solid"
-            aria-label="Contact"
-          >
-            Contact
-          </Button>
-          <Button
-            v-if="welcome.cta.letsTalk"
-            href="#contact"
-            variant="ghost"
-            aria-label="Let’s Talk"
-          >
-            Let’s Talk
+          <Button variant="animated" aria-label="Explore">
+            <template #icon>
+              <ArrowDown />
+            </template>
+            Explore
           </Button>
         </div>
       </div>
@@ -153,8 +142,7 @@ const socialSize = computed(() => (welcome.style?.socialVariant === 'mini' ? 'sm
   justify-content: center;
   position: relative;
   overflow: hidden;
-  box-shadow:
-    0 0 0 8px rgba(47,107,237,0.08),
+  box-shadow: 0 0 0 8px rgba(47, 107, 237, 0.08),
     0 0 36px 12px color-mix(in oklab, var(--glow) 55%, transparent),
     0 0 64px 24px color-mix(in oklab, var(--glow) 30%, transparent);
 }
@@ -181,14 +169,28 @@ const socialSize = computed(() => (welcome.style?.socialVariant === 'mini' ? 'sm
 }
 
 /* Simple layout spacing for controls */
-.welcome-socials { display: flex; gap: 18px; margin: 10px 0 0 0; }
-.welcome-cta { display: flex; gap: 14px; margin-top: 18px; }
+.welcome-socials {
+  display: flex;
+  gap: 18px;
+  margin: 10px 0 0 0;
+}
+.welcome-cta {
+  display: flex;
+  gap: 14px;
+  margin-top: 18px;
+}
 
 /* Responsive */
 @media (max-width: 799px) {
-  .welcome-content { flex-direction: column; }
-  .welcome-avatar { order: -1; }
-  .welcome-text { order: 1; }
+  .welcome-content {
+    flex-direction: column;
+  }
+  .welcome-avatar {
+    order: -1;
+  }
+  .welcome-text {
+    order: 1;
+  }
 }
 @media (min-width: 800px) {
   .welcome-content {
