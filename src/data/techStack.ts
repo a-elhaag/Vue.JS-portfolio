@@ -155,7 +155,12 @@ export const techStack: TechItem[] = [
   // // { id: 'postgres',   icon: 'simple-icons:postgresql',    label: 'PostgreSQL',    color: '#336791' },
   // // { id: 'redis',      icon: 'simple-icons:redis',         label: 'Redis',         color: '#DC382D' },
   // // { id: 'mongodb',    icon: 'simple-icons:mongodb',       label: 'MongoDB',       color: '#47A248' },
-  // // { id: 'sqlite',     icon: 'simple-icons:sqlite',        label: 'SQLite',        color: '#003B57' },
+  {
+    id: "sqlite",
+    icon: "simple-icons:sqlite",
+    label: "SQLite",
+    color: "#003B57",
+  },
   // // { id: 'supabase',   icon: 'simple-icons:supabase',      label: 'Supabase',      color: '#3ECF8E' },
   // // { id: 'firebase',   icon: 'simple-icons:firebase',      label: 'Firebase',      color: '#FFCA28' },
   // // { id: 'prisma',     icon: 'simple-icons:prisma',        label: 'Prisma',        color: '#2D3748' },
@@ -210,7 +215,12 @@ export const techStack: TechItem[] = [
   // // { id: 'postcss',    icon: 'simple-icons:postcss',       label: 'PostCSS',       color: '#DD3A0A' },
   // // { id: 'sass',       icon: 'simple-icons:sass',          label: 'Sass',          color: '#CC6699' },
   // // { id: 'eslint',     icon: 'simple-icons:eslint',        label: 'ESLint',        color: '#4B32C3' },
-  // // { id: 'prettier',   icon: 'simple-icons:prettier',      label: 'Prettier',      color: '#F7B93E' },
+  {
+    id: "prettier",
+    icon: "simple-icons:prettier",
+    label: "Prettier",
+    color: "#F7B93E",
+  },
   // // { id: 'husky',      icon: 'simple-icons:husky',         label: 'Husky' },
   // // { id: 'lerna',      icon: 'simple-icons:lerna',         label: 'Lerna' },
   // // { id: 'turborepo',  icon: 'simple-icons:turborepo',     label: 'Turborepo' },
@@ -224,7 +234,7 @@ export const techStack: TechItem[] = [
   // // { id: 'storybook',  icon: 'simple-icons:storybook',     label: 'Storybook',     color: '#FF4785' },
 
   // // --- UI Kits / Design ---
-  // // { id: 'mui',        icon: 'simple-icons:mui',           label: 'MUI',           color: '#007FFF' },
+  { id: "mui", icon: "simple-icons:mui", label: "MUI", color: "#007FFF" },
   // // { id: 'ant',        icon: 'simple-icons:antdesign',     label: 'Ant Design',    color: '#0170FE' },
   // // { id: 'chakra',     icon: 'simple-icons:chakraui',      label: 'Chakra UI',     color: '#319795' },
   // // { id: 'figma',      icon: 'simple-icons:figma',         label: 'Figma',         color: '#F24E1E' },
