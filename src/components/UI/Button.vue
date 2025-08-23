@@ -120,4 +120,9 @@ const target = computed(() => props.external ? '_blank' : undefined)
 
 /* SOCIAL size mini maps to sm dimensions */
 .v-social.s-sm { width: 36px; height: 36px; }
+
+/* Hide empty icon slots */
+.icon:empty {
+  display: none;
+}
 </style>
