@@ -12,13 +12,10 @@ export const welcome = {
     github: "https://github.com/anas",
     linkedin: "https://linkedin.com/in/anas",
     x: "https://x.com/anas_handle",
-    instagram: "",
-    facebook: "",
-    medium: "https://medium.com/@anas"
   },
   style: {
     socialVariant: "mini",
-    order: ["github", "x", "linkedin", "medium", "instagram", "facebook"]
+    order: ["github", "x", "linkedin"]
   },
   cta: {
     contactMe: true,
