@@ -284,14 +284,6 @@ const shouldRenderAutoView = computed(
 }
 
 /* Meta */
-.meta {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-  white-space: nowrap;
-  color: var(--muted);
-  font-size: 0.88rem;
-}
 .type-pill {
   border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
   background: color-mix(in srgb, var(--accent) 10%, transparent);
@@ -316,6 +308,7 @@ const shouldRenderAutoView = computed(
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  transform: translateY(-65px);
 }
 
 /* Inline SVG safety */

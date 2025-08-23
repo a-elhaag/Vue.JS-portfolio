@@ -29,9 +29,6 @@ function onToggle() {
     <div class="container">
       <header class="header">
         <h2 id="creds-title" class="title">Credentials</h2>
-        <p class="subtitle">
-          Certifications and badges that are actually verifiable.
-        </p>
       </header>
 
       <div id="creds-grid" class="grid" aria-live="polite">
@@ -100,21 +97,6 @@ function onToggle() {
   .container {
     padding-inline: 0;
   }
-}
-
-.header {
-  display: grid;
-  gap: 6px;
-}
-.title {
-  font-size: clamp(1.6rem, 3vw, 2rem);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--text);
-}
-.subtitle {
-  font-size: 1rem;
-  color: var(--muted);
 }
 
 /* Grid */

@@ -304,7 +304,7 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   flex-direction: column;
   gap: 20px;
   position: relative;
-  padding-inline: 12px; /* comfy phone edges */
+  padding-inline: 12px;
 }
 @media (min-width: 720px) {
   .container {
@@ -312,29 +312,6 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   }
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.titles {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.title {
-  font-size: clamp(1.6rem, 3.2vw, 2rem);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--text);
-}
-.subtitle {
-  font-size: 1rem;
-  color: var(--glow);
-  font-weight: 500;
-}
 .controls {
   display: flex;
   gap: 10px;
