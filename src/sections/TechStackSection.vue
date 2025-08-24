@@ -212,6 +212,98 @@ async function onMouseUp() {
 function snapBack() {
   items.value = techStack.slice();
 }
+
+const isAnimating = ref(false);
+
+async function toggleShowAll() {
+  if (isAnimating.value) return;
+
+  isAnimating.value = true;
+  const wasShowingAll = showAll.value;
+
+  if (wasShowingAll) {
+    // Hiding items: stagger fade out from end to beginning
+    const hiddenItems = visible.value.slice(
+      isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE
+    );
+
+    // Animate items out with stagger
+    for (let i = hiddenItems.length - 1; i >= 0; i--) {
+      const index =
+        (isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE) +
+        i;
+      const el = cardEls.value[index];
+      if (el) {
+        el.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+        el.style.transform = "translateY(-10px) scale(0.95)";
+        el.style.opacity = "0";
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50)); // 50ms stagger
+    }
+
+    showAll.value = false;
+    await nextTick();
+
+    // Reset transforms
+    cardEls.value.forEach((el) => {
+      if (el) {
+        el.style.transition = "";
+        el.style.transform = "";
+        el.style.opacity = "";
+      }
+    });
+  } else {
+    // Showing items: reveal with stagger fade in
+    showAll.value = true;
+    await nextTick();
+
+    const newItems = visible.value.slice(
+      isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE
+    );
+
+    // Start new items hidden
+    for (let i = 0; i < newItems.length; i++) {
+      const index =
+        (isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE) +
+        i;
+      const el = cardEls.value[index];
+      if (el) {
+        el.style.transform = "translateY(20px) scale(0.9)";
+        el.style.opacity = "0";
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Animate items in with stagger
+    for (let i = 0; i < newItems.length; i++) {
+      const index =
+        (isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE) +
+        i;
+      const el = cardEls.value[index];
+      if (el) {
+        el.style.transition = "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+        el.style.transform = "translateY(0) scale(1)";
+        el.style.opacity = "1";
+      }
+      await new Promise((resolve) => setTimeout(resolve, 80)); // 80ms stagger
+    }
+
+    // Clean up after animation
+    setTimeout(() => {
+      cardEls.value.forEach((el) => {
+        if (el) {
+          el.style.transition = "";
+          el.style.transform = "";
+          el.style.opacity = "";
+        }
+      });
+    }, 400);
+  }
+
+  isAnimating.value = false;
+}
+
 const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
 </script>
 
@@ -276,13 +368,17 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
         <Button
           variant="animated"
           size="md"
+          :disabled="isAnimating"
           aria-label="Toggle more"
-          @click="showAll = !showAll"
+          @click="toggleShowAll"
         >
           <template #icon>
-            <component :is="showAll ? ChevronUp : ChevronDown" />
+            <component
+              :is="showAll ? ChevronUp : ChevronDown"
+              :class="{ 'animate-spin': isAnimating }"
+            />
           </template>
-          {{ toggleLabel }}
+          {{ isAnimating ? "Loading..." : toggleLabel }}
         </Button>
       </div>
     </div>
@@ -325,6 +421,7 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(2, 1fr);
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 @media (min-width: 720px) {
   .grid {
@@ -349,6 +446,7 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
 .card-shell {
   position: relative;
   touch-action: manipulation;
+  will-change: transform, opacity;
 }
 .card-shell.can-drag {
   cursor: grab;
@@ -385,6 +483,20 @@ const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
   display: flex;
   justify-content: center;
   margin-top: 12px;
+}
+
+/* Animation classes */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Ghost element (rendered in body) */
