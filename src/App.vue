@@ -2,6 +2,7 @@
 import WelcomeSection from "./sections/WelcomeSection.vue";
 import TechSection from "./sections/TechStackSection.vue";
 import CertsSection from "./sections/CertsSection.vue";
+import AboutSection from "./sections/AboutSection.vue";
 </script>
 
 <template>
@@ -9,5 +10,6 @@ import CertsSection from "./sections/CertsSection.vue";
     <WelcomeSection />
     <TechSection />
     <CertsSection />
+    <AboutSection />
   </main>
 </template>

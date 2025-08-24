@@ -12,6 +12,7 @@
     "@iconify/vue": "^5.0.0",
     "@vueuse/motion": "^3.0.3",
     "lucide-vue-next": "^0.541.0",
+    "markdown-it": "^14.1.0",
     "ofetch": "^1.4.1",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
