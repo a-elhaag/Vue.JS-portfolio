@@ -3,11 +3,11 @@ export const welcome = {
   headline: "I build intelligent systems with code and cloud.",
   intro: [
     "Software engineering student and AI engineer.",
-    "Focused on Vue 3 + TypeScript, Azure, and fast, accessible UIs."
+    "Focused on Vue 3 + TypeScript, Azure, and fast, accessible UIs.",
   ],
-  
+
   contacts: {
-    email: "you@example.com"
+    email: "you@example.com",
   },
   socials: {
     github: "https://github.com/anas",
@@ -15,14 +15,14 @@ export const welcome = {
     x: "https://x.com/anas_handle",
   },
   style: {
-    order: ["github", "x", "linkedin"]
+    order: ["github", "x", "linkedin"],
   },
   cta: {
     contactMe: true,
-    letsTalk: true
+    letsTalk: true,
   },
   avatar: {
-    src: "src/assets/avatar.svg",
-    alt: "Portrait of Anas"
-  }
-} as const
+    src: "src/assets/me.jpeg",
+    alt: "Portrait of Anas",
+  },
+} as const;

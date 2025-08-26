@@ -19,8 +19,10 @@ export type TechEdge = { from: string; to: string; strength?: number }; // 0..1
 export const groups: TechGroup[] = [
   { id: "core", label: "Core Languages" },
   { id: "web", label: "Web & Frameworks" },
+  { id: "mobile", label: "Mobile" },
   { id: "cloud", label: "Cloud & DevOps" },
   { id: "dataai", label: "Data & AI" },
+  { id: "vector", label: "Vector & IR" },
   { id: "db", label: "Databases" },
   { id: "tools", label: "Tools & Productivity" },
   { id: "ui", label: "UI Kits" },
@@ -29,7 +31,7 @@ export const groups: TechGroup[] = [
 ];
 
 // -----------------------------
-// Nodes (everything you listed)
+// Nodes (expanded to your stack)
 // -----------------------------
 export const nodes: TechNode[] = [
   // Core
@@ -39,6 +41,13 @@ export const nodes: TechNode[] = [
     icon: "simple-icons:typescript",
     group: "core",
     color: "#3178C6",
+  },
+  {
+    id: "js",
+    label: "JavaScript",
+    icon: "simple-icons:javascript",
+    group: "core",
+    color: "#F7DF1E",
   },
   {
     id: "python",
@@ -85,13 +94,6 @@ export const nodes: TechNode[] = [
     color: "#61DAFB",
   },
   {
-    id: "reactnative",
-    label: "React Native",
-    icon: "simple-icons:react",
-    group: "web",
-    color: "#61DAFB",
-  },
-  {
     id: "nextjs",
     label: "Next.js",
     icon: "simple-icons:nextdotjs",
@@ -104,6 +106,29 @@ export const nodes: TechNode[] = [
     icon: "simple-icons:fastapi",
     group: "web",
     color: "#009688",
+  },
+
+  // Mobile
+  {
+    id: "reactnative",
+    label: "React Native",
+    icon: "simple-icons:react",
+    group: "mobile",
+    color: "#61DAFB",
+  },
+  {
+    id: "expo",
+    label: "Expo",
+    icon: "simple-icons:expo",
+    group: "mobile",
+    color: "#000000",
+  },
+  {
+    id: "androidstudio",
+    label: "Android Studio",
+    icon: "simple-icons:androidstudio",
+    group: "mobile",
+    color: "#3DDC84",
   },
 
   // Cloud & DevOps
@@ -157,6 +182,19 @@ export const nodes: TechNode[] = [
     group: "dataai",
   },
   {
+    id: "langgraph",
+    label: "LangGraph",
+    icon: "mdi:graph-outline",
+    group: "dataai",
+  },
+  { id: "langsmith", label: "LangSmith", icon: "mdi:tools", group: "dataai" },
+  {
+    id: "llamaindex",
+    label: "LlamaIndex",
+    icon: "mdi:book-search-outline",
+    group: "dataai",
+  },
+  {
     id: "colab",
     label: "Google Colab",
     icon: "simple-icons:googlecolab",
@@ -177,8 +215,15 @@ export const nodes: TechNode[] = [
     group: "dataai",
     color: "#20BEFF",
   },
-
+  { id: "ollama", label: "Ollama", icon: "mdi:cow", group: "dataai" },
   // Databases
+  {
+    id: "postgres",
+    label: "PostgreSQL",
+    icon: "simple-icons:postgresql",
+    group: "db",
+    color: "#336791",
+  },
   {
     id: "mysql",
     label: "MySQL",
@@ -192,6 +237,13 @@ export const nodes: TechNode[] = [
     icon: "simple-icons:sqlite",
     group: "db",
     color: "#003B57",
+  },
+  {
+    id: "neo4j",
+    label: "Neo4j",
+    icon: "simple-icons:neo4j",
+    group: "db",
+    color: "#008CC1",
   },
 
   // Tools & Productivity
@@ -267,6 +319,8 @@ export const nodes: TechNode[] = [
     group: "ui",
     color: "#007FFF",
   },
+  { id: "lucide", label: "lucide-icons", icon: "lucide:palette", group: "ui" },
+  { id: "recharts", label: "Recharts", icon: "mdi:chart-line", group: "ui" },
 
   // Quantum
   {
@@ -299,51 +353,69 @@ export const nodes: TechNode[] = [
 export const edges: TechEdge[] = [
   // Core relations
   { from: "vue", to: "ts", strength: 0.9 },
-  { from: "react", to: "ts", strength: 0.7 },
-  { from: "reactnative", to: "ts", strength: 0.6 },
-  { from: "nextjs", to: "react", strength: 0.9 },
+  { from: "react", to: "ts", strength: 0.8 },
+  { from: "reactnative", to: "ts", strength: 0.7 },
+  { from: "nextjs", to: "react", strength: 0.95 },
+  { from: "fastapi", to: "python", strength: 0.95 },
 
-  { from: "fastapi", to: "python", strength: 0.9 },
+  // Mobile relations
+  { from: "expo", to: "reactnative", strength: 0.95 },
+  { from: "androidstudio", to: "reactnative", strength: 0.7 },
 
   // Cloud <> Web
   { from: "vercel", to: "vue", strength: 0.6 },
-  { from: "vercel", to: "nextjs", strength: 0.8 },
-  { from: "docker", to: "fastapi", strength: 0.6 },
+  { from: "vercel", to: "nextjs", strength: 0.9 },
+  { from: "docker", to: "fastapi", strength: 0.7 },
 
   // Cloud <> AI
-  { from: "azure", to: "openai", strength: 0.85 },
-  { from: "azure", to: "langchain", strength: 0.6 },
-  { from: "aifoundry", to: "openai", strength: 0.8 },
-  { from: "azurefunc", to: "python", strength: 0.6 },
+  { from: "azure", to: "openai", strength: 0.9 },
+  { from: "azure", to: "langchain", strength: 0.7 },
+  { from: "aifoundry", to: "openai", strength: 0.85 },
+  { from: "azurefunc", to: "python", strength: 0.7 },
 
   // Data/AI toolchain
-  { from: "python", to: "jupyter", strength: 0.7 },
-  { from: "python", to: "colab", strength: 0.6 },
-  { from: "python", to: "kaggle", strength: 0.5 },
-  { from: "langchain", to: "openai", strength: 0.7 },
+  { from: "python", to: "jupyter", strength: 0.8 },
+  { from: "python", to: "colab", strength: 0.7 },
+  { from: "python", to: "kaggle", strength: 0.6 },
+  { from: "langchain", to: "openai", strength: 0.8 },
+  { from: "langgraph", to: "langchain", strength: 0.8 },
+  { from: "langsmith", to: "langchain", strength: 0.7 },
+  { from: "llamaindex", to: "openai", strength: 0.7 },
+  { from: "ollama", to: "langchain", strength: 0.6 },
+
+  { from: "js", to: "ts", strength: 0.9 },
+  { from: "js", to: "react", strength: 0.8 },
+  { from: "js", to: "vue", strength: 0.7 },
+
 
   // DB relations
-  { from: "fastapi", to: "sqlite", strength: 0.5 },
-  { from: "fastapi", to: "mysql", strength: 0.4 },
+  { from: "fastapi", to: "sqlite", strength: 0.6 },
+  { from: "fastapi", to: "mysql", strength: 0.5 },
+  { from: "fastapi", to: "postgres", strength: 0.8 },
+  { from: "fastapi", to: "neo4j", strength: 0.65 },
+  { from: "neo4j", to: "python", strength: 0.6 },
 
   // Tools
-  { from: "git", to: "github", strength: 0.9 },
-  { from: "vscode", to: "ts", strength: 0.5 },
-  { from: "postman", to: "fastapi", strength: 0.6 },
-  { from: "prettier", to: "ts", strength: 0.4 },
+  { from: "git", to: "github", strength: 0.95 },
+  { from: "vscode", to: "ts", strength: 0.6 },
+  { from: "postman", to: "fastapi", strength: 0.7 },
+  { from: "prettier", to: "ts", strength: 0.5 },
+  { from: "notion", to: "github", strength: 0.35 },
 
   // UI
+  { from: "lucide", to: "react", strength: 0.7 },
+  { from: "lucide", to: "vue", strength: 0.6 },
+  { from: "recharts", to: "react", strength: 0.7 },
   { from: "mui", to: "react", strength: 0.6 },
 
   // Quantum
-  { from: "qdk", to: "qsharp", strength: 0.85 },
+  { from: "qdk", to: "qsharp", strength: 0.9 },
 
   // Web3
-  { from: "zksync", to: "ts", strength: 0.4 },
-  { from: "zksync", to: "react", strength: 0.4 },
+  { from: "zksync", to: "ts", strength: 0.45 },
+  { from: "zksync", to: "react", strength: 0.45 },
 
   // Misc helpful links
-  { from: "notion", to: "github", strength: 0.3 },
   { from: "yarn", to: "vue", strength: 0.35 },
   { from: "npm", to: "react", strength: 0.35 },
 ];
