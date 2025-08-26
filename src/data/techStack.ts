@@ -1,278 +1,349 @@
 // src/data/techStack.ts
-// ----------------------------------------------------------------------------
-// Structured, future-proof tech stack list.
-// - Your own stack entries are UNCOMMENTED (active).
-// - Tons of additional techs are PROVIDED BUT COMMENTED, organized by category.
-// - Uses Iconify tokens (mostly `simple-icons:*`; a few `mdi:*` where needed).
-// - Each entry supports an optional `color` used by your TechCard tint/icon.
-// ----------------------------------------------------------------------------
 
-export type TechItem = {
+// -----------------------------
+// Graph data model
+// -----------------------------
+export type TechGroup = { id: string; label: string };
+export type TechNode = {
   id: string;
   label: string;
-  /** Iconify token, e.g., "simple-icons:react" or "devicon:vuejs" */
-  icon: string;
-  /** Optional brand color used for accent + Iconify icon color */
-  color?: string;
+  icon: string; // Iconify token
+  group: string; // group id
+  color?: string; // optional brand tint
 };
+export type TechEdge = { from: string; to: string; strength?: number }; // 0..1
 
-export const techStack: TechItem[] = [
+// -----------------------------
+// Groups (clusters on the canvas)
+// -----------------------------
+export const groups: TechGroup[] = [
+  { id: "core", label: "Core Languages" },
+  { id: "web", label: "Web & Frameworks" },
+  { id: "cloud", label: "Cloud & DevOps" },
+  { id: "dataai", label: "Data & AI" },
+  { id: "db", label: "Databases" },
+  { id: "tools", label: "Tools & Productivity" },
+  { id: "ui", label: "UI Kits" },
+  { id: "quant", label: "Quantum" },
+  { id: "web3", label: "Web3 / L2" },
+];
+
+// -----------------------------
+// Nodes (everything you listed)
+// -----------------------------
+export const nodes: TechNode[] = [
+  // Core
   {
-    id: "github",
-    icon: "simple-icons:github",
-    label: "GitHub",
-    color: "#181717",
+    id: "ts",
+    label: "TypeScript",
+    icon: "simple-icons:typescript",
+    group: "core",
+    color: "#3178C6",
   },
-  { id: "git", icon: "simple-icons:git", label: "Git", color: "#F05032" },
   {
-    id: "vscode",
-    icon: "simple-icons:visualstudiocode",
-    label: "VS Code",
-    color: "#007ACC",
+    id: "python",
+    label: "Python",
+    icon: "simple-icons:python",
+    group: "core",
+    color: "#3776AB",
   },
-  { id: "npm", icon: "simple-icons:npm", label: "npm", color: "#CB3837" },
-  { id: "yarn", icon: "simple-icons:yarn", label: "Yarn", color: "#2C8EBB" },
   {
-    id: "powershell",
-    icon: "simple-icons:powershell",
-    label: "PowerShell",
-    color: "#5391FE",
+    id: "c",
+    label: "C",
+    icon: "simple-icons:c",
+    group: "core",
+    color: "#A8B9CC",
+  },
+  {
+    id: "cpp",
+    label: "C++",
+    icon: "simple-icons:cplusplus",
+    group: "core",
+    color: "#00599C",
+  },
+  {
+    id: "solidity",
+    label: "Solidity",
+    icon: "simple-icons:solidity",
+    group: "core",
+    color: "#363636",
   },
 
-  // --- Hosting & Infra ---
+  // Web & Frameworks
   {
-    id: "vercel",
-    icon: "simple-icons:vercel",
-    label: "Vercel",
-    color: "#000000",
+    id: "vue",
+    label: "Vue 3",
+    icon: "akar-icons:vue-fill",
+    group: "web",
+    color: "#42B883",
   },
   {
-    id: "docker",
-    icon: "simple-icons:docker",
-    label: "Docker",
-    color: "#2496ED",
+    id: "react",
+    label: "React",
+    icon: "simple-icons:react",
+    group: "web",
+    color: "#61DAFB",
   },
-
-  // --- Cloud & AI ---
-  {
-    id: "azure",
-    icon: "simple-icons:microsoftazure",
-    label: "Azure",
-    color: "#0078D4",
-  },
-  {
-    id: "aifoundry",
-    icon: "simple-icons:microsoftazure",
-    label: "Azure AI Foundry",
-    color: "#0078D4",
-  },
-  {
-    id: "azurefunc",
-    icon: "simple-icons:azurefunctions",
-    label: "Azure Functions",
-    color: "#0062AD",
-  },
-  { id: "openai", icon: "simple-icons:openai", label: "OpenAI" },
-  { id: "langchain", icon: "simple-icons:langchain", label: "LangChain" },
-
-  // --- Frameworks (Web & App) ---
-  { id: "react", icon: "simple-icons:react", label: "React", color: "#61DAFB" },
   {
     id: "reactnative",
-    icon: "simple-icons:react",
     label: "React Native",
+    icon: "simple-icons:react",
+    group: "web",
     color: "#61DAFB",
   },
   {
     id: "nextjs",
-    icon: "simple-icons:nextdotjs",
     label: "Next.js",
+    icon: "simple-icons:nextdotjs",
+    group: "web",
     color: "#000000",
   },
-  { id: "vue", icon: "devicon:vuejs", label: "Vue 3", color: "#42B883" },
-  {
-    id: "ts",
-    icon: "simple-icons:typescript",
-    label: "TypeScript",
-    color: "#3178C6",
-  },
-  // // { id: 'express',    icon: 'simple-icons:express',       label: 'Express',       color: '#000000' },
-  // // { id: 'nestjs',     icon: 'simple-icons:nestjs',        label: 'NestJS',        color: '#E0234E' },
-  // // { id: 'django',     icon: 'simple-icons:django',        label: 'Django',        color: '#092E20' },
-  // // { id: 'flask',      icon: 'simple-icons:flask',         label: 'Flask',         color: '#000000' },
-  // // { id: 'spring',     icon: 'simple-icons:spring',        label: 'Spring',        color: '#6DB33F' },
-  // // { id: 'dotnet',     icon: 'simple-icons:dotnet',        label: '.NET',          color: '#512BD4' },
-
-  // // { id: 'svelte',     icon: 'simple-icons:svelte',        label: 'Svelte',        color: '#FF3E00' },
-  // // { id: 'angular',    icon: 'simple-icons:angular',       label: 'Angular',       color: '#DD0031' },
-  // // { id: 'nuxt',       icon: 'simple-icons:nuxtdotjs',     label: 'Nuxt',          color: '#00DC82' },
-  // // { id: 'astro',      icon: 'simple-icons:astro',         label: 'Astro',         color: '#BC52EE' },
-  // // { id: 'remix',      icon: 'simple-icons:remix',         label: 'Remix',         color: '#000000' },
-  // // { id: 'vite',       icon: 'simple-icons:vite',          label: 'Vite',          color: '#646CFF' },
-
-  // --- Backend / APIs ---
   {
     id: "fastapi",
-    icon: "simple-icons:fastapi",
     label: "FastAPI",
+    icon: "simple-icons:fastapi",
+    group: "web",
     color: "#009688",
   },
+
+  // Cloud & DevOps
   {
-    id: "postman",
-    icon: "simple-icons:postman",
-    label: "Postman",
-    color: "#FF6C37",
+    id: "azure",
+    label: "Azure",
+    icon: "simple-icons:microsoftazure",
+    group: "cloud",
+    color: "#0078D4",
   },
-
-  // --- Languages ---
   {
-    id: "python",
-    icon: "simple-icons:python",
-    label: "Python",
-    color: "#3776AB",
+    id: "aifoundry",
+    label: "Azure AI Foundry",
+    icon: "simple-icons:microsoftazure",
+    group: "cloud",
+    color: "#0078D4",
   },
-  { id: "c", icon: "simple-icons:c", label: "C", color: "#A8B9CC" },
-  { id: "cpp", icon: "simple-icons:cplusplus", label: "C++", color: "#00599C" },
   {
-    id: "solidity",
-    icon: "simple-icons:solidity",
-    label: "Solidity",
-    color: "#363636",
+    id: "azurefunc",
+    label: "Azure Functions",
+    icon: "simple-icons:azurefunctions",
+    group: "cloud",
+    color: "#0062AD",
   },
-  // // { id: 'go',         icon: 'simple-icons:go',            label: 'Go',            color: '#00ADD8' },
-  // // { id: 'rust',       icon: 'simple-icons:rust',          label: 'Rust' },
-  // // { id: 'java',       icon: 'simple-icons:java',          label: 'Java',          color: '#007396' },
-  // // { id: 'swift',      icon: 'simple-icons:swift',         label: 'Swift',         color: '#FA7343' },
-  // // { id: 'kotlin',     icon: 'simple-icons:kotlin',        label: 'Kotlin',        color: '#7F52FF' },
-  // // { id: 'r',          icon: 'simple-icons:r',             label: 'R',             color: '#276DC3' },
-  // // { id: 'julia',      icon: 'simple-icons:julia',         label: 'Julia',         color: '#9558B2' },
-  // // { id: 'matlab',     icon: 'simple-icons:matlab',        label: 'MATLAB' },
-  // // { id: 'bash',       icon: 'simple-icons:gnubash',       label: 'Bash',          color: '#4EAA25' },
-  // // { id: 'powershell', icon: 'simple-icons:powershell',    label: 'PowerShell',    color: '#5391FE' },
-
-  // --- Databases ---
-  { id: "mysql", icon: "simple-icons:mysql", label: "MySQL", color: "#4479A1" },
-  // // { id: 'postgres',   icon: 'simple-icons:postgresql',    label: 'PostgreSQL',    color: '#336791' },
-  // // { id: 'redis',      icon: 'simple-icons:redis',         label: 'Redis',         color: '#DC382D' },
-  // // { id: 'mongodb',    icon: 'simple-icons:mongodb',       label: 'MongoDB',       color: '#47A248' },
   {
-    id: "sqlite",
-    icon: "simple-icons:sqlite",
-    label: "SQLite",
-    color: "#003B57",
-  },
-  // // { id: 'supabase',   icon: 'simple-icons:supabase',      label: 'Supabase',      color: '#3ECF8E' },
-  // // { id: 'firebase',   icon: 'simple-icons:firebase',      label: 'Firebase',      color: '#FFCA28' },
-  // // { id: 'prisma',     icon: 'simple-icons:prisma',        label: 'Prisma',        color: '#2D3748' },
-
-  // --- Quantum ---
-  { id: "qsharp", icon: "mdi:alpha-q", label: "Q#", color: "#0078D4" },
-  { id: "qdk", icon: "mdi:atom", label: "Quantum DevKit", color: "#7C4DFF" },
-
-  // --- Web3 / L2 ---
-  { id: "zksync", icon: "token-branded:zksync", label: "zkSync" },
-
-  // --- Productivity ---
-  {
-    id: "notion",
-    icon: "simple-icons:notion",
-    label: "Notion",
+    id: "vercel",
+    label: "Vercel",
+    icon: "simple-icons:vercel",
+    group: "cloud",
     color: "#000000",
   },
-  // { id: 'kafka',      icon: 'simple-icons:apachekafka',   label: 'Apache Kafka',  color: '#231F20' },
-  // { id: 'rabbitmq',   icon: 'simple-icons:rabbitmq',      label: 'RabbitMQ',      color: '#FF6600' },
-  // { id: 'grpc',       icon: 'simple-icons:grpc',          label: 'gRPC',          color: '#3D3D3D' },
-
-  // // --- APIs ---
-  // // { id: 'graphql',    icon: 'simple-icons:graphql',       label: 'GraphQL',       color: '#E10098' },
-  // // { id: 'apollo',     icon: 'simple-icons:apollographql', label: 'Apollo',        color: '#311C87' },
-  // // { id: 'insomnia',   icon: 'simple-icons:insomnia',      label: 'Insomnia',      color: '#4000BF' },
-
-  // --- Big Data / ETL ---
-  // // { id: 'spark',      icon: 'simple-icons:apachespark',   label: 'Apache Spark',  color: '#E25A1C' },
-  // // { id: 'hadoop',     icon: 'simple-icons:apachehadoop',  label: 'Apache Hadoop', color: '#66CCFF' },
-  // // { id: 'airflow',    icon: 'simple-icons:apacheairflow', label: 'Apache Airflow',color: '#017CEE' },
-  // // { id: 'dbt',        icon: 'simple-icons:dbt',           label: 'dbt',           color: '#FF694B' },
-
-  // // --- DevOps / IaC / Orchestration ---
-  // // { id: 'terraform',  icon: 'simple-icons:terraform',     label: 'Terraform',     color: '#7B42BC' },
-  // // { id: 'ansible',    icon: 'simple-icons:ansible',       label: 'Ansible',       color: '#EE0000' },
-  // // { id: 'k8s',        icon: 'simple-icons:kubernetes',    label: 'Kubernetes',    color: '#326CE5' },
-  // // { id: 'helm',       icon: 'simple-icons:helm',          label: 'Helm',          color: '#0F1689' },
-  // // { id: 'nginx',      icon: 'simple-icons:nginx',         label: 'NGINX',         color: '#009639' },
-  // // { id: 'traefik',    icon: 'simple-icons:traefikproxy',  label: 'Traefik',       color: '#24A1C1' },
-
-  // // --- Cloud (extra) ---
-  // // { id: 'aws',        icon: 'simple-icons:amazonaws',     label: 'AWS',           color: '#FF9900' },
-  // // { id: 'gcp',        icon: 'simple-icons:googlecloud',   label: 'Google Cloud',  color: '#4285F4' },
-  // // { id: 'cloudflare', icon: 'simple-icons:cloudflare',    label: 'Cloudflare',    color: '#F38020' },
-
-  // // --- Build Tools / Monorepo ---
-  // // { id: 'webpack',    icon: 'simple-icons:webpack',       label: 'Webpack',       color: '#8DD6F9' },
-  // // { id: 'rollup',     icon: 'simple-icons:rollupdotjs',   label: 'Rollup',        color: '#EC4A3F' },
-  // // { id: 'parcel',     icon: 'simple-icons:parcel',        label: 'Parcel',        color: '#FF4C1F' },
-  // // { id: 'babel',      icon: 'simple-icons:babel',         label: 'Babel',         color: '#F9DC3E' },
-  // // { id: 'postcss',    icon: 'simple-icons:postcss',       label: 'PostCSS',       color: '#DD3A0A' },
-  // // { id: 'sass',       icon: 'simple-icons:sass',          label: 'Sass',          color: '#CC6699' },
-  // // { id: 'eslint',     icon: 'simple-icons:eslint',        label: 'ESLint',        color: '#4B32C3' },
   {
-    id: "prettier",
-    icon: "simple-icons:prettier",
-    label: "Prettier",
-    color: "#F7B93E",
+    id: "docker",
+    label: "Docker",
+    icon: "simple-icons:docker",
+    group: "cloud",
+    color: "#2496ED",
   },
-  // // { id: 'husky',      icon: 'simple-icons:husky',         label: 'Husky' },
-  // // { id: 'lerna',      icon: 'simple-icons:lerna',         label: 'Lerna' },
-  // // { id: 'turborepo',  icon: 'simple-icons:turborepo',     label: 'Turborepo' },
-  // // { id: 'nx',         icon: 'simple-icons:nx',            label: 'Nx',            color: '#143055' },
 
-  // // --- Testing ---
-  // // { id: 'jest',       icon: 'simple-icons:jest',          label: 'Jest',          color: '#C21325' },
-  // // { id: 'vitest',     icon: 'simple-icons:vitest',        label: 'Vitest',        color: '#6E9F18' },
-  // // { id: 'playwright', icon: 'simple-icons:playwright',    label: 'Playwright',    color: '#2EAD33' },
-  // // { id: 'cypress',    icon: 'simple-icons:cypress',       label: 'Cypress',       color: '#17202C' },
-  // // { id: 'storybook',  icon: 'simple-icons:storybook',     label: 'Storybook',     color: '#FF4785' },
-
-  // // --- UI Kits / Design ---
-  { id: "mui", icon: "simple-icons:mui", label: "MUI", color: "#007FFF" },
-  // // { id: 'ant',        icon: 'simple-icons:antdesign',     label: 'Ant Design',    color: '#0170FE' },
-  // // { id: 'chakra',     icon: 'simple-icons:chakraui',      label: 'Chakra UI',     color: '#319795' },
-  // // { id: 'figma',      icon: 'simple-icons:figma',         label: 'Figma',         color: '#F24E1E' },
-  // // { id: 'adobexd',    icon: 'simple-icons:adobexd',       label: 'Adobe XD',      color: '#FF61F6' },
-  // // { id: 'ps',         icon: 'simple-icons:adobephotoshop',label: 'Photoshop',     color: '#31A8FF' },
-  // // { id: 'ai',         icon: 'simple-icons:adobeillustrator', label: 'Illustrator',color: '#FF9A00' },
-  // // { id: 'canva',      icon: 'simple-icons:canva',         label: 'Canva',         color: '#00C4CC' },
-
-  // // --- Desktop / Runtime ---
-  // // { id: 'electron',   icon: 'simple-icons:electron',      label: 'Electron',      color: '#47848F' },
-  // // { id: 'tauri',      icon: 'simple-icons:tauri',         label: 'Tauri',         color: '#FFC131' },
-
-  // // --- Web Graphics / DataViz ---
-  // // { id: 'three',      icon: 'simple-icons:threedotjs',    label: 'Three.js',      color: '#000000' },
-  // // { id: 'd3',         icon: 'simple-icons:d3dotjs',       label: 'D3.js',         color: '#F9A03C' },
-
-  // // --- Team / PM ---
-  // // { id: 'jira',       icon: 'simple-icons:jira',          label: 'Jira',          color: '#0052CC' },
-  // // { id: 'trello',     icon: 'simple-icons:trello',        label: 'Trello',        color: '#0052CC' },
-  // // { id: 'slack',      icon: 'simple-icons:slack',         label: 'Slack',         color: '#4A154B' },
-
-  // --- Data Science / ML ---
+  // Data & AI
+  {
+    id: "openai",
+    label: "OpenAI",
+    icon: "simple-icons:openai",
+    group: "dataai",
+  },
+  {
+    id: "langchain",
+    label: "LangChain",
+    icon: "simple-icons:langchain",
+    group: "dataai",
+  },
   {
     id: "colab",
-    icon: "simple-icons:googlecolab",
     label: "Google Colab",
+    icon: "simple-icons:googlecolab",
+    group: "dataai",
     color: "#F9AB00",
   },
   {
     id: "jupyter",
-    icon: "simple-icons:jupyter",
     label: "Jupyter",
+    icon: "simple-icons:jupyter",
+    group: "dataai",
     color: "#F37626",
   },
   {
     id: "kaggle",
-    icon: "simple-icons:kaggle",
     label: "Kaggle",
+    icon: "simple-icons:kaggle",
+    group: "dataai",
     color: "#20BEFF",
   },
+
+  // Databases
+  {
+    id: "mysql",
+    label: "MySQL",
+    icon: "simple-icons:mysql",
+    group: "db",
+    color: "#4479A1",
+  },
+  {
+    id: "sqlite",
+    label: "SQLite",
+    icon: "simple-icons:sqlite",
+    group: "db",
+    color: "#003B57",
+  },
+
+  // Tools & Productivity
+  {
+    id: "git",
+    label: "Git",
+    icon: "simple-icons:git",
+    group: "tools",
+    color: "#F05032",
+  },
+  {
+    id: "github",
+    label: "GitHub",
+    icon: "simple-icons:github",
+    group: "tools",
+    color: "#181717",
+  },
+  {
+    id: "vscode",
+    label: "VS Code",
+    icon: "simple-icons:visualstudiocode",
+    group: "tools",
+    color: "#007ACC",
+  },
+  {
+    id: "npm",
+    label: "npm",
+    icon: "simple-icons:npm",
+    group: "tools",
+    color: "#CB3837",
+  },
+  {
+    id: "yarn",
+    label: "Yarn",
+    icon: "simple-icons:yarn",
+    group: "tools",
+    color: "#2C8EBB",
+  },
+  {
+    id: "powershell",
+    label: "PowerShell",
+    icon: "simple-icons:powershell",
+    group: "tools",
+    color: "#5391FE",
+  },
+  {
+    id: "postman",
+    label: "Postman",
+    icon: "simple-icons:postman",
+    group: "tools",
+    color: "#FF6C37",
+  },
+  {
+    id: "notion",
+    label: "Notion",
+    icon: "simple-icons:notion",
+    group: "tools",
+    color: "#000000",
+  },
+  {
+    id: "prettier",
+    label: "Prettier",
+    icon: "simple-icons:prettier",
+    group: "tools",
+    color: "#F7B93E",
+  },
+
+  // UI Kits
+  {
+    id: "mui",
+    label: "MUI",
+    icon: "simple-icons:mui",
+    group: "ui",
+    color: "#007FFF",
+  },
+
+  // Quantum
+  {
+    id: "qsharp",
+    label: "Q#",
+    icon: "mdi:alpha-q",
+    group: "quant",
+    color: "#0078D4",
+  },
+  {
+    id: "qdk",
+    label: "Quantum DevKit",
+    icon: "mdi:atom",
+    group: "quant",
+    color: "#7C4DFF",
+  },
+
+  // Web3 / L2
+  {
+    id: "zksync",
+    label: "zkSync",
+    icon: "token-branded:zksync",
+    group: "web3",
+  },
+];
+
+// -----------------------------
+// Edges (relationships)
+// -----------------------------
+export const edges: TechEdge[] = [
+  // Core relations
+  { from: "vue", to: "ts", strength: 0.9 },
+  { from: "react", to: "ts", strength: 0.7 },
+  { from: "reactnative", to: "ts", strength: 0.6 },
+  { from: "nextjs", to: "react", strength: 0.9 },
+
+  { from: "fastapi", to: "python", strength: 0.9 },
+
+  // Cloud <> Web
+  { from: "vercel", to: "vue", strength: 0.6 },
+  { from: "vercel", to: "nextjs", strength: 0.8 },
+  { from: "docker", to: "fastapi", strength: 0.6 },
+
+  // Cloud <> AI
+  { from: "azure", to: "openai", strength: 0.85 },
+  { from: "azure", to: "langchain", strength: 0.6 },
+  { from: "aifoundry", to: "openai", strength: 0.8 },
+  { from: "azurefunc", to: "python", strength: 0.6 },
+
+  // Data/AI toolchain
+  { from: "python", to: "jupyter", strength: 0.7 },
+  { from: "python", to: "colab", strength: 0.6 },
+  { from: "python", to: "kaggle", strength: 0.5 },
+  { from: "langchain", to: "openai", strength: 0.7 },
+
+  // DB relations
+  { from: "fastapi", to: "sqlite", strength: 0.5 },
+  { from: "fastapi", to: "mysql", strength: 0.4 },
+
+  // Tools
+  { from: "git", to: "github", strength: 0.9 },
+  { from: "vscode", to: "ts", strength: 0.5 },
+  { from: "postman", to: "fastapi", strength: 0.6 },
+  { from: "prettier", to: "ts", strength: 0.4 },
+
+  // UI
+  { from: "mui", to: "react", strength: 0.6 },
+
+  // Quantum
+  { from: "qdk", to: "qsharp", strength: 0.85 },
+
+  // Web3
+  { from: "zksync", to: "ts", strength: 0.4 },
+  { from: "zksync", to: "react", strength: 0.4 },
+
+  // Misc helpful links
+  { from: "notion", to: "github", strength: 0.3 },
+  { from: "yarn", to: "vue", strength: 0.35 },
+  { from: "npm", to: "react", strength: 0.35 },
 ];

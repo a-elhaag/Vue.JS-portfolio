@@ -1,549 +1,390 @@
 <script setup lang="ts">
-import {
-  ref,
-  reactive,
-  computed,
-  onMounted,
-  nextTick,
-  onBeforeUnmount,
-} from "vue";
-import TechCard from "../components/TechCard.vue";
-import Button from "../components/Button.vue";
-import { techStack, type TechItem } from "../data/techStack";
-import { RotateCcw, ChevronDown, ChevronUp } from "lucide-vue-next";
+import { ref, onMounted, onBeforeUnmount, watchEffect } from "vue";
+import { Icon } from "@iconify/vue";
+import { groups, nodes, edges, type TechNode } from "../data/techStack";
 
-/** Desktop detection: enable drag only on hover-capable, fine-pointer devices */
-const isDesktop = ref(false);
-function updateDesktopFlag() {
-  const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-  isDesktop.value = mq.matches;
+/* =============================
+   TUNABLE CONSTANTS (one place)
+   ============================= */
+const W_DESKTOP = 1200;
+const H_DESKTOP = 740;
+const PADDING = 96;
+
+// Node size
+const NODE_R = 26; // circle radius (↑ bigger nodes)
+const ICON_SZ = 28; // icon size
+
+// Initial placement
+const RING = 200; // distance of nodes around each group center
+
+// Physics
+const MIN_DIST = NODE_R * 4 + 12; // min comfortable spacing (anti-overlap)
+const REPULSE_K = 0.55; // repulsion strength
+const EDGE_REST_DESK = 350; // desired edge length (desktop)
+const EDGE_REST_MOB = 120; // desired edge length (mobile)
+const EDGE_K = 0.06; // spring strength toward rest length
+const GRAVITY = 0.008; // gentle pull to the center for cohesion
+const ITER = 260; // iterations of relaxation
+
+// Rendering
+const EDGE_BASE_OPACITY = 0.38;
+const EDGE_FOCUS_OPACITY = 0.72;
+const EDGE_UNFOCUSED_OPACITY = 0.16;
+
+/* =============================
+   RESPONSIVE SWITCH
+   ============================= */
+const isMobile = ref(false);
+function updateMobileFlag() {
+  isMobile.value = window.matchMedia("(max-width: 720px)").matches;
 }
 onMounted(() => {
-  updateDesktopFlag();
-  window.addEventListener("resize", updateDesktopFlag, { passive: true });
+  updateMobileFlag();
+  window.addEventListener("resize", updateMobileFlag, { passive: true });
 });
-onBeforeUnmount(() => window.removeEventListener("resize", updateDesktopFlag));
+onBeforeUnmount(() => window.removeEventListener("resize", updateMobileFlag));
 
-/** Data */
-const items = ref<TechItem[]>(techStack.slice());
-const originalIds = techStack.map((t) => t.id);
-const orderChanged = computed(() => {
-  const ids = items.value.map((i) => i.id);
-  if (ids.length !== originalIds.length) return true;
-  for (let i = 0; i < ids.length; i++)
-    if (ids[i] !== originalIds[i]) return true;
-  return false;
-});
-
-/** Collapsed views:
- *  - Mobile: first 2 items
- *  - Desktop: first 3 rows (columns auto-detected from computed grid template)
- */
-const showAll = ref(false);
-const COLLAPSE_AT_MOBILE = 2;
-
-const gridEl = ref<HTMLElement | null>(null);
-const desktopCols = ref(0); // computed from grid-template-columns
-
-function measureCols() {
-  const el = gridEl.value;
-  if (!el) return;
-  const style = getComputedStyle(el);
-  const tpl = style.gridTemplateColumns || "";
-  // Count tracks in the resolved grid template (e.g., "286px 286px 286px")
-  let count = tpl.split(" ").filter(Boolean).length;
-  // Fallback heuristic if the browser returns "none"
-  if (!count) {
-    const approxColWidth = 176; // ≈ 11rem card + gap
-    count = Math.max(1, Math.floor(el.clientWidth / approxColWidth));
+/* =============================
+   UTILS
+   ============================= */
+function seededShuffle<T>(arr: T[], seed = 7): T[] {
+  const a = arr.slice();
+  let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s * 16807) % 2147483647;
+    const j = s % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  desktopCols.value = count;
+  return a;
 }
 
-let ro: ResizeObserver | null = null;
-onMounted(() => {
-  measureCols();
-  ro = new ResizeObserver(() => measureCols());
-  if (gridEl.value) ro.observe(gridEl.value);
-  window.addEventListener("resize", measureCols, { passive: true });
-});
-onBeforeUnmount(() => {
-  if (ro && gridEl.value) ro.unobserve(gridEl.value);
-  window.removeEventListener("resize", measureCols);
+/* Precompute degrees (how many edges touch a node) */
+const degree: Record<string, number> = {};
+nodes.forEach((n) => (degree[n.id] = 0));
+edges.forEach((e) => {
+  degree[e.from]++;
+  degree[e.to]++;
 });
 
-const collapsedDesktopCount = computed(() =>
-  Math.max(0, desktopCols.value * 3)
-);
-const canCollapse = computed(() => {
-  if (isDesktop.value) return items.value.length > collapsedDesktopCount.value;
-  return items.value.length > COLLAPSE_AT_MOBILE;
-});
+/* =============================
+   INITIAL LAYOUTS
+   ============================= */
+// Desktop: groups on a ring; each group gets a node ring; then physics
+function circlePositions() {
+  const cx = W_DESKTOP / 2,
+    cy = H_DESKTOP / 2;
+  const R = Math.min(W_DESKTOP, H_DESKTOP) / 2 - PADDING - 40;
+  const step = (2 * Math.PI) / groups.length;
 
-const visible = computed(() => {
-  if (showAll.value) return items.value;
-  if (isDesktop.value)
-    return items.value.slice(
-      0,
-      collapsedDesktopCount.value || items.value.length
-    );
-  return items.value.slice(0, COLLAPSE_AT_MOBILE);
-});
+  const gPos: Record<string, { x: number; y: number }> = {};
+  groups.forEach((g, i) => {
+    const a = i * step - Math.PI / 2;
+    gPos[g.id] = { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R };
+  });
 
-/** Drag & Drop (desktop): smooth, no vibration (LERP to cursor), ghost snaps in */
-const cardEls = ref<HTMLElement[]>([]);
-function setCardRef(el: Element | null, i: number) {
-  if (el) cardEls.value[i] = el as HTMLElement;
-}
+  const byGroup: Record<string, TechNode[]> = {};
+  nodes.forEach((n) => (byGroup[n.group] ??= []).push(n));
 
-const drag = reactive({
-  active: false,
-  index: -1,
-  overIndex: -1,
-  ghost: null as HTMLElement | null,
-  x: 0,
-  y: 0, // drawn position
-  tx: 0,
-  ty: 0, // target position (cursor - offset)
-  ox: 0,
-  oy: 0, // pickup offset inside card
-  raf: 0 as number,
-});
-
-function onMouseDown(e: MouseEvent, index: number) {
-  if (!isDesktop.value) return;
-  const el = cardEls.value[index];
-  if (!el) return;
-
-  const r = el.getBoundingClientRect();
-  drag.active = true;
-  drag.index = index;
-  drag.ox = e.clientX - r.left;
-  drag.oy = e.clientY - r.top;
-  drag.x = r.left;
-  drag.y = r.top;
-  drag.tx = e.clientX - drag.ox;
-  drag.ty = e.clientY - drag.oy;
-
-  const ghost = el.cloneNode(true) as HTMLElement;
-  ghost.classList.add("drag-ghost");
-  ghost.style.width = r.width + "px";
-  ghost.style.height = r.height + "px";
-  document.body.appendChild(ghost);
-  drag.ghost = ghost;
-
-  drag.raf = requestAnimationFrame(step);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onMouseUp);
-  e.preventDefault();
-}
-
-function onMouseMove(e: MouseEvent) {
-  if (!drag.active) return;
-  drag.tx = e.clientX - drag.ox;
-  drag.ty = e.clientY - drag.oy;
-
-  // Nearest slot among currently visible cards
-  let nearest = -1,
-    best = Infinity;
-  const n = visible.value.length;
-  for (let i = 0; i < n; i++) {
-    const el = cardEls.value[i];
-    if (!el) continue;
-    const r = el.getBoundingClientRect();
-    const cx = r.left + r.width / 2,
-      cy = r.top + r.height / 2;
-    const d = Math.hypot(e.clientX - cx, e.clientY - cy);
-    if (d < best) {
-      best = d;
-      nearest = i;
-    }
-  }
-  drag.overIndex = nearest;
-}
-
-function step() {
-  if (!drag.active || !drag.ghost) return;
-  const a = 0.25; // smoothing factor; higher = snappier
-  drag.x += (drag.tx - drag.x) * a;
-  drag.y += (drag.ty - drag.y) * a;
-  drag.ghost.style.transform = `translate3d(${drag.x}px, ${drag.y}px, 0) scale(1.03)`;
-  drag.raf = requestAnimationFrame(step);
-}
-
-async function onMouseUp() {
-  if (!drag.active) return;
-  cancelAnimationFrame(drag.raf);
-
-  const from = drag.index;
-  const to = drag.overIndex >= 0 ? drag.overIndex : from;
-
-  if (to !== from) {
-    const next = items.value.slice();
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    items.value = next;
-  }
-
-  await nextTick();
-  const target = cardEls.value[to];
-  if (drag.ghost && target) {
-    const r = target.getBoundingClientRect();
-    const dx = r.left - drag.x,
-      dy = r.top - drag.y;
-    drag.ghost.style.transition =
-      "transform .28s cubic-bezier(.22,1,.36,1), opacity .28s";
-    drag.ghost.style.transform = `translate3d(${drag.x + dx}px, ${
-      drag.y + dy
-    }px, 0) scale(1)`;
-    drag.ghost.style.opacity = "0";
-    setTimeout(() => drag.ghost?.remove(), 290);
-  }
-
-  drag.active = false;
-  drag.index = -1;
-  drag.overIndex = -1;
-  drag.ghost = null;
-  window.removeEventListener("mousemove", onMouseMove);
-  window.removeEventListener("mouseup", onMouseUp);
-}
-
-/** Controls */
-function snapBack() {
-  items.value = techStack.slice();
-}
-
-const isAnimating = ref(false);
-
-async function toggleShowAll() {
-  if (isAnimating.value) return;
-
-  isAnimating.value = true;
-  const wasShowingAll = showAll.value;
-
-  if (wasShowingAll) {
-    // Hiding items: stagger fade out from end to beginning
-    const hiddenItems = visible.value.slice(
-      isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE
-    );
-
-    // Animate items out with stagger
-    for (let i = hiddenItems.length - 1; i >= 0; i--) {
-      const index =
-        (isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE) +
-        i;
-      const el = cardEls.value[index];
-      if (el) {
-        el.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
-        el.style.transform = "translateY(-10px) scale(0.95)";
-        el.style.opacity = "0";
-      }
-      await new Promise((resolve) => setTimeout(resolve, 50)); // 50ms stagger
-    }
-
-    showAll.value = false;
-    await nextTick();
-
-    // Reset transforms
-    cardEls.value.forEach((el) => {
-      if (el) {
-        el.style.transition = "";
-        el.style.transform = "";
-        el.style.opacity = "";
-      }
+  const nPos: Record<string, { x: number; y: number }> = {};
+  for (const g of groups) {
+    const list = seededShuffle(byGroup[g.id] ?? [], 11);
+    const s = (2 * Math.PI) / Math.max(1, list.length);
+    list.forEach((n, i) => {
+      const a = i * s;
+      nPos[n.id] = {
+        x: gPos[g.id].x + Math.cos(a) * RING,
+        y: gPos[g.id].y + Math.sin(a) * RING,
+      };
     });
-  } else {
-    // Showing items: reveal with stagger fade in
-    showAll.value = true;
-    await nextTick();
-
-    const newItems = visible.value.slice(
-      isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE
-    );
-
-    // Start new items hidden
-    for (let i = 0; i < newItems.length; i++) {
-      const index =
-        (isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE) +
-        i;
-      const el = cardEls.value[index];
-      if (el) {
-        el.style.transform = "translateY(20px) scale(0.9)";
-        el.style.opacity = "0";
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    // Animate items in with stagger
-    for (let i = 0; i < newItems.length; i++) {
-      const index =
-        (isDesktop.value ? collapsedDesktopCount.value : COLLAPSE_AT_MOBILE) +
-        i;
-      const el = cardEls.value[index];
-      if (el) {
-        el.style.transition = "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
-        el.style.transform = "translateY(0) scale(1)";
-        el.style.opacity = "1";
-      }
-      await new Promise((resolve) => setTimeout(resolve, 80)); // 80ms stagger
-    }
-
-    // Clean up after animation
-    setTimeout(() => {
-      cardEls.value.forEach((el) => {
-        if (el) {
-          el.style.transition = "";
-          el.style.transform = "";
-          el.style.opacity = "";
-        }
-      });
-    }, 400);
   }
-
-  isAnimating.value = false;
+  return { gPos, nPos };
 }
 
-const toggleLabel = computed(() => (showAll.value ? "Show less" : "Show more"));
+// Mobile: vertical lanes seed, then physics uses the same springs
+const mobileHeight = ref(H_DESKTOP);
+function verticalPositions() {
+  const laneX = 112;
+  const startY = 84;
+  const groupGap = 148;
+  const nodeGap = 78;
+  const cols = 3;
+  const colW = 112;
+
+  const gPos: Record<string, { x: number; y: number }> = {};
+  const nPos: Record<string, { x: number; y: number }> = {};
+
+  let y = startY;
+  const byGroup: Record<string, TechNode[]> = {};
+  nodes.forEach((n) => (byGroup[n.group] ??= []).push(n));
+
+  for (const g of groups) {
+    gPos[g.id] = { x: laneX, y };
+    const list = seededShuffle(byGroup[g.id] ?? [], 5);
+    const x0 = laneX + 150;
+    list.forEach((n, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      nPos[n.id] = { x: x0 + col * colW, y: y + row * nodeGap };
+    });
+    const rows = Math.max(1, Math.ceil(list.length / cols));
+    y += rows * nodeGap + groupGap;
+  }
+  mobileHeight.value = y + 140;
+  return { gPos, nPos };
+}
+
+/* =============================
+   RELAXATION (physics)
+   - anti-overlap
+   - spring edges with rest length (controls edge length)
+   - gravity to center
+   - gentle tether for isolates (degree 0)
+   ============================= */
+function relax(
+  nPos: Record<string, { x: number; y: number }>,
+  gPos: Record<string, { x: number; y: number }>,
+  restLength: number,
+  width: number,
+  height: number
+) {
+  const ids = Object.keys(nPos);
+  const cx = width / 2,
+    cy = height / 2;
+
+  for (let iter = 0; iter < ITER; iter++) {
+    for (let i = 0; i < ids.length; i++) {
+      const a = ids[i],
+        pa = nPos[a];
+      let vx = 0,
+        vy = 0;
+
+      // repulsion (anti-overlap)
+      for (let j = i + 1; j < ids.length; j++) {
+        const b = ids[j],
+          pb = nPos[b];
+        const dx = pa.x - pb.x,
+          dy = pa.y - pb.y;
+        const d = Math.hypot(dx, dy) || 0.0001;
+        const overlap = Math.max(0, MIN_DIST - d);
+        if (overlap > 0) {
+          const fx = (overlap / d) * dx * REPULSE_K;
+          const fy = (overlap / d) * dy * REPULSE_K;
+          vx += fx;
+          vy += fy;
+          pb.x -= fx;
+          pb.y -= fy;
+        }
+      }
+
+      // Hooke springs toward a rest length for edges
+      for (const e of edges) {
+        if (e.from === a || e.to === a) {
+          const other = e.from === a ? e.to : e.from;
+          const p2 = nPos[other];
+          if (!p2) continue;
+          const dx = p2.x - pa.x,
+            dy = p2.y - pa.y;
+          const d = Math.hypot(dx, dy) || 0.0001;
+          const dirx = dx / d,
+            diry = dy / d;
+          // vary rest length a bit with strength (weaker edge → slightly longer)
+          const rest =
+            restLength * (e.strength ? 1 + 0.15 * (1 - e.strength) : 1);
+          const stretch = d - rest;
+          vx += dirx * stretch * EDGE_K;
+          vy += diry * stretch * EDGE_K;
+        }
+      }
+
+      // global gravity toward center (prevents drift)
+      vx += (cx - pa.x) * GRAVITY;
+      vy += (cy - pa.y) * GRAVITY;
+
+      // isolates: tether softly toward nearest group
+      if (degree[a] === 0) {
+        let near = { x: cx, y: cy },
+          best = Infinity;
+        for (const g of groups) {
+          const p = gPos[g.id];
+          const d = Math.hypot(pa.x - p.x, pa.y - p.y);
+          if (d < best) {
+            best = d;
+            near = p;
+          }
+        }
+        vx += (near.x - pa.x) * 0.02;
+        vy += (near.y - pa.y) * 0.02;
+      }
+
+      // integrate + clamp to stage
+      pa.x = Math.max(PADDING, Math.min(width - PADDING, pa.x + vx));
+      pa.y = Math.max(PADDING, Math.min(height - PADDING, pa.y + vy));
+    }
+  }
+  return nPos;
+}
+
+/* =============================
+   RECOMPUTE LAYOUTS
+   ============================= */
+const gPos = ref<Record<string, { x: number; y: number }>>({});
+const nPos = ref<Record<string, { x: number; y: number }>>({});
+
+function recompute() {
+  if (isMobile.value) {
+    const { gPos: gp, nPos: np } = verticalPositions();
+    gPos.value = gp;
+    nPos.value = relax(
+      np,
+      gp,
+      EDGE_REST_MOB,
+      W_DESKTOP,
+      Math.max(mobileHeight.value, H_DESKTOP)
+    );
+  } else {
+    const { gPos: gp, nPos: np } = circlePositions();
+    gPos.value = gp;
+    nPos.value = relax(np, gp, EDGE_REST_DESK, W_DESKTOP, H_DESKTOP);
+  }
+}
+onMounted(recompute);
+watchEffect(recompute);
+
+/* =============================
+   INTERACTION (click only)
+   ============================= */
+const selectedId = ref<string | null>(null);
+function onNodeClick(id: string) {
+  selectedId.value = selectedId.value === id ? null : id;
+}
+function isNeighbor(a: string, b: string) {
+  return edges.some(
+    (e) => (e.from === a && e.to === b) || (e.to === a && e.from === b)
+  );
+}
+const nodeOpacity = (id: string) => {
+  if (!selectedId.value) return 1;
+  return id === selectedId.value || isNeighbor(selectedId.value, id) ? 1 : 0.28;
+};
+const edgeOpacity = (a: string, b: string) => {
+  if (!selectedId.value) return EDGE_BASE_OPACITY;
+  return a === selectedId.value || b === selectedId.value
+    ? EDGE_FOCUS_OPACITY
+    : EDGE_UNFOCUSED_OPACITY;
+};
 </script>
 
 <template>
-  <section id="tech" class="tech-section">
-    <div class="container">
-      <header class="header">
-        <div class="titles">
-          <h2 class="title">Tech Stack</h2>
-          <p class="subtitle">Just Drag & Drop.</p>
-        </div>
+  <section id="tech" class="tech-stage">
+    <div class="wrap">
+      <h2 class="title">Tech Stack</h2>
 
-        <!-- Desktop only: show Reset button when order changed -->
-        <div class="controls" v-if="isDesktop && orderChanged">
-          <Button
-            variant="animated"
-            size="md"
-            @click="snapBack"
-            aria-label="Reset order"
-          >
-            <template #icon>
-              <!-- Wrap to avoid global fill rules turning strokes into blobs -->
-              <span class="reset-icn"><RotateCcw /></span>
-            </template>
-            Reset
-          </Button>
-        </div>
-      </header>
-
-      <div
-        ref="gridEl"
-        class="grid"
-        :data-desktop="isDesktop"
-        :data-dragging="drag.active"
+      <svg
+        class="stage"
+        :viewBox="`0 0 ${W_DESKTOP} ${
+          isMobile ? Math.max(mobileHeight, H_DESKTOP) : H_DESKTOP
+        }`"
+        role="img"
+        aria-label="Technology relationship map"
       >
-        <div
-          v-for="(t, i) in visible"
-          :key="t.id"
-          class="slot"
-          :class="{ 'slot-highlight': i === drag.overIndex && drag.active }"
-          :style="{ '--accent': t.color || 'var(--glow)' }"
-        >
-          <div
-            class="card-shell"
-            :class="{ 'can-drag': isDesktop }"
-            :ref="(el) => setCardRef(el as Element, i)"
-            @mousedown="onMouseDown($event, i)"
+        <!-- Edges (undirected; no labels) -->
+        <g class="edges">
+          <line
+            v-for="(e, i) in edges"
+            :key="i"
+            :x1="nPos[e.from]?.x || 0"
+            :y1="nPos[e.from]?.y || 0"
+            :x2="nPos[e.to]?.x || 0"
+            :y2="nPos[e.to]?.y || 0"
+            stroke="color-mix(in oklab, var(--text) 28%, transparent)"
+            :stroke-opacity="edgeOpacity(e.from, e.to)"
+            stroke-width="1.6"
+          />
+        </g>
+
+        <!-- Nodes -->
+        <g class="nodes">
+          <g
+            v-for="n in nodes"
+            :key="n.id"
+            class="node"
+            :transform="`translate(${nPos[n.id]?.x || 0} ${
+              nPos[n.id]?.y || 0
+            })`"
+            :opacity="nodeOpacity(n.id)"
+            @click="onNodeClick(n.id)"
           >
-            <!-- subtle drag indicator (desktop only) -->
-            <div v-if="isDesktop" class="handle" aria-hidden="true">
-              <span class="dot"></span><span class="dot"></span
-              ><span class="dot"></span>
-            </div>
-
-            <TechCard :icon="t.icon" :label="t.label" :color="t.color" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Show more/less (both mobile and desktop, gated by canCollapse) -->
-      <div v-if="canCollapse" class="more-wrap">
-        <Button
-          variant="animated"
-          size="md"
-          :disabled="isAnimating"
-          aria-label="Toggle more"
-          @click="toggleShowAll"
-        >
-          <template #icon>
-            <component
-              :is="showAll ? ChevronUp : ChevronDown"
-              :class="{ 'animate-spin': isAnimating }"
+            <circle
+              :r="NODE_R"
+              fill="#fff"
+              stroke="var(--border)"
+              stroke-width="1"
+              :filter="selectedId === n.id ? 'url(#glow)' : undefined"
             />
-          </template>
-          {{ isAnimating ? "Loading..." : toggleLabel }}
-        </Button>
-      </div>
+            <g :transform="`translate(${-ICON_SZ / 2},${-ICON_SZ / 2})`">
+              <Icon
+                :icon="n.icon"
+                :width="ICON_SZ"
+                :height="ICON_SZ"
+                :style="{ color: 'var(--text)' }"
+              />
+            </g>
+          </g>
+        </g>
+
+        <defs>
+          <!-- cinematic blue glow on selection only -->
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="3.4"
+              flood-color="var(--glow)"
+              flood-opacity="0.45"
+            />
+          </filter>
+        </defs>
+      </svg>
     </div>
   </section>
 </template>
 
 <style scoped>
-/* Section / container */
-.tech-section {
-  width: 100%;
-  display: flex;
-  justify-content: center;
+.tech-stage {
   background: var(--bg);
-  padding: 40px 0 24px;
-}
-.container {
-  width: min(1000px, 96vw);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-  padding-inline: 12px;
-}
-@media (min-width: 720px) {
-  .container {
-    padding-inline: 0;
-  }
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
-}
-
-/* Grid:
-   - Phones: 2 columns
-   - Desktop: responsive autofill
-*/
-.grid {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(2, 1fr);
-  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-@media (min-width: 720px) {
-  .grid {
-    gap: 16px;
-    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-  }
-}
-
-/* Slots + highlight */
-.slot {
-  position: relative;
-  transition: outline 0.16s ease, background 0.16s ease;
-}
-.slot-highlight {
-  outline: 2px dashed color-mix(in srgb, var(--accent) 55%, var(--border));
-  outline-offset: 4px;
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
-  border-radius: 18px;
-}
-
-/* Card shell is the drag target */
-.card-shell {
-  position: relative;
-  touch-action: manipulation;
-  will-change: transform, opacity;
-}
-.card-shell.can-drag {
-  cursor: grab;
-}
-.grid[data-dragging="true"] .card-shell.can-drag {
-  cursor: grabbing;
-}
-
-/* Freeze hover during drag to avoid jank */
-.grid[data-dragging="true"] :deep(.card) {
-  transition: none !important;
-  transform: none !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
-}
-
-/* Drag indicator (desktop only) */
-.handle {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  display: inline-flex;
-  gap: 3px;
-  opacity: 0.55;
-}
-.dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-/* Show more/less row */
-.more-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 12px;
+  padding: 28px 0 12px;
+}
+.wrap {
+  width: min(1280px, 96vw);
+}
+.title {
+  font-size: clamp(20px, 3.5vw, 26px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0 0 12px 6px;
+}
+.stage {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-/* Animation classes */
-.animate-spin {
-  animation: spin 1s linear infinite;
+/* Nodes: no hover animation; selection only */
+.nodes .node {
+  cursor: pointer;
+  transition: opacity 0.12s ease;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
+/* Slightly tighter padding on phones */
+@media (max-width: 720px) {
+  .tech-stage {
+    padding-top: 16px;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Ghost element (rendered in body) */
-.drag-ghost {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 1000;
-  pointer-events: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22),
-    0 0 22px 6px rgba(47, 107, 237, 0.1);
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
-}
-
-/* Only this reset icon: force strokes (prevents "blob" when global fill rules exist) */
-.reset-icn :deep(svg) {
-  fill: none !important;
-  stroke: currentColor !important;
-  stroke-width: 2 !important;
-  vector-effect: non-scaling-stroke;
-}
-
-/* Phone downsizing for cards (matches your earlier ask) */
-@media (max-width: 719.98px) {
-  .grid {
-    gap: 12px;
-  }
-  .slot :deep(.card) {
-    padding: 14px;
-    min-height: 7.4rem;
-    border-radius: 14px;
-  }
-  .slot :deep(.icon-wrap) {
-    width: 2.7rem;
-    height: 2.7rem;
-    border-radius: 10px;
-  }
-  .slot :deep(.icon) {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-  .slot :deep(.label) {
-    font-size: 0.92rem;
+  .title {
+    margin-left: 2px;
   }
 }
 </style>
