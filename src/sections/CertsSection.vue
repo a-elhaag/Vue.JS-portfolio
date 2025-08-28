@@ -29,10 +29,6 @@ function onToggle() {
   <section id="credentials" class="creds-section" aria-labelledby="creds-title">
     <SectionHeader section-name="credentials" />
     <div class="container">
-      <header class="header">
-        <h2 id="creds-title" class="title">Credentials</h2>
-      </header>
-
       <div id="creds-grid" class="grid" aria-live="polite">
         <div v-for="it in visible" :key="it.id" class="slot">
           <Card
