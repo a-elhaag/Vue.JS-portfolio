@@ -4,6 +4,7 @@ import Card from "../components/Card.vue";
 import Button from "../components/Button.vue";
 import { certs, type CertItem } from "../data/cert";
 import { ChevronDown, ChevronUp } from "lucide-vue-next";
+import SectionHeader from "../components/SectionHeader.vue";
 
 const MAX_VISIBLE = 8;
 const UNIFIED_VARIANT: "elevated" | "outline" | "solid" | "glass" = "outline";
@@ -26,6 +27,7 @@ function onToggle() {
 
 <template>
   <section id="credentials" class="creds-section" aria-labelledby="creds-title">
+    <SectionHeader section-name="credentials" />
     <div class="container">
       <header class="header">
         <h2 id="creds-title" class="title">Credentials</h2>

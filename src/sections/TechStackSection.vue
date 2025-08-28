@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watchEffect } from "vue";
 import { Icon } from "@iconify/vue";
 import { groups, nodes, edges, type TechNode } from "../data/techStack";
+import SectionHeader from "../components/SectionHeader.vue";
 
 /* =============================
    Stage & environment
@@ -300,8 +301,8 @@ const showLabel = (id: string) => {
 
 <template>
   <section id="tech" class="tech-stage">
+    <SectionHeader section-name="tech stack" />
     <div class="wrap" :class="{ mobile: isMobile }">
-
       <svg
         class="stage"
         :class="{ mobile: isMobile }"

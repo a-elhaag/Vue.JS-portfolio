@@ -1,5 +1,3 @@
-# About
-
 I’m Anas — a software engineering student and certified AI engineer who builds systems that feel ==human-centric==. My stack: Vue 3 + TypeScript up front, FastAPI + Azure on the back. I prefer lean systems that don’t collapse under their own weight.
 
 Over the past year I’ve led products under **Hexal Labs**—**Melo** (AI diet planner, second place) and **Inkr** (notes with memory). Serverless backbones, embeddings, and vector search that ship fast and scale honestly.

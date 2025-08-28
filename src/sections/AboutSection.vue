@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
 import rawMd from "../data/about.md?raw";
 import { renderMiniMdToHtml, htmlToBlocks } from "../lib/md";
+import SectionHeader from "../components/SectionHeader.vue";
 
 type Block = { html: string; type: "para" | "other" };
 type Line = { text: string; type: "line" | "other" };
@@ -127,6 +128,7 @@ onBeforeUnmount(() => {
 
 <template>
   <section id="about" class="about-wheel-root">
+    <SectionHeader section-name="about" />
     <div class="about-wheel-wrap">
       <template v-for="(line, i) in lines" :key="i">
         <div v-if="line.type === 'line'" class="wheel-container">
