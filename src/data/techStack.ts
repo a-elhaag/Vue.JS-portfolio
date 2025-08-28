@@ -245,8 +245,13 @@ export const nodes: TechNode[] = [
     group: "db",
     color: "#008CC1",
   },
-
-  // Tools & Productivity
+  {
+    id: "graphdb",
+    label: "Graph Database",
+    icon: "mdi:graph-outline",
+    group: "db",
+    color: "#4A90E2",
+  },
   {
     id: "git",
     label: "Git",
@@ -387,15 +392,18 @@ export const edges: TechEdge[] = [
   { from: "js", to: "react", strength: 0.8 },
   { from: "js", to: "vue", strength: 0.7 },
 
-
   // DB relations
   { from: "fastapi", to: "sqlite", strength: 0.6 },
   { from: "fastapi", to: "mysql", strength: 0.5 },
   { from: "fastapi", to: "postgres", strength: 0.8 },
   { from: "fastapi", to: "neo4j", strength: 0.65 },
   { from: "neo4j", to: "python", strength: 0.6 },
-
-  // Tools
+  { from: "graphdb", to: "neo4j", strength: 0.9 },
+  { from: "graphdb", to: "python", strength: 0.7 },
+  { from: "neo4j", to: "langchain", strength: 0.7 },
+  { from: "graphdb", to: "langchain", strength: 0.6 },
+  { from: "neo4j", to: "langgraph", strength: 0.8 },
+  { from: "graphdb", to: "langgraph", strength: 0.7 },
   { from: "git", to: "github", strength: 0.95 },
   { from: "vscode", to: "ts", strength: 0.6 },
   { from: "postman", to: "fastapi", strength: 0.7 },
