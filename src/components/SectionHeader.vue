@@ -4,26 +4,14 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 // Track which section is in view and control visibility
 const currentSection = ref("");
 const label = computed(() => currentSection.value.replace(/-/g, " "));
-// Menu state and sections list
 const show = ref(false);
-const menuOpen = ref(false);
-const sectionsList = ref<{ id: string; label: string }[]>([]);
-// Navigate to a selected section
-function gotoSection(id: string) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
-    menuOpen.value = false;
-    show.value = false;
-  }
-}
 let timeoutId: number | null = null;
 let observer: IntersectionObserver;
 
 onMounted(() => {
-  const sections = Array.from(document.querySelectorAll<HTMLElement>("section[id]"));
-  // Populate section list for menu
-  sectionsList.value = sections.map(sec => ({ id: sec.id, label: sec.id.replace(/-/g, ' ') }));
+  const sections = Array.from(
+    document.querySelectorAll<HTMLElement>("section[id]")
+  );
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -32,7 +20,7 @@ onMounted(() => {
           show.value = true;
           if (timeoutId) clearTimeout(timeoutId);
           timeoutId = window.setTimeout(() => {
-            if (!menuOpen.value) show.value = false;
+            show.value = false;
           }, 5000);
         }
       });
@@ -51,15 +39,8 @@ onBeforeUnmount(() => {
 <template>
   <transition name="fade">
     <div v-if="show" class="section-header">
-      <div class="header-content" @click="menuOpen = !menuOpen">
+      <div class="header-content">
         <span class="section-label">{{ label }}</span>
-      </div>
-      <div v-if="menuOpen" class="section-menu">
-        <ul>
-          <li v-for="sec in sectionsList" :key="sec.id" @click="gotoSection(sec.id)">
-            {{ sec.label }}
-          </li>
-        </ul>
       </div>
     </div>
   </transition>
@@ -73,38 +54,6 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
   z-index: 1000;
   pointer-events: none;
-}
-
-/* Menu styles */
-.section-menu {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-top: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  pointer-events: auto;
-}
-.section-menu ul {
-  list-style: none;
-  margin: 0;
-  padding: 0.5rem;
-}
-.section-menu li {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.section-menu li:hover {
-  background: rgba(255,255,255,0.2);
-}
-
-/* ensure header-content is clickable */
-.header-content {
-  pointer-events: auto;
 }
 
 .header-content {
