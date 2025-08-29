@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
 /* Wrapper with perspective for 3D animation */
 .about-wheel-wrap {
   position: relative;
-  width: min(900px, 96vw);
+  width: min(1000px, 96vw); /* widened to match other sections */
   padding-inline: 1rem;
   perspective: 950px;
   perspective-origin: center 42%;
