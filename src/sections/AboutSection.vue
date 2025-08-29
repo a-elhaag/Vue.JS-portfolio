@@ -141,7 +141,10 @@ onMounted(() => {
   .about-content {
     padding-inline: 1.25rem;
   }
-  .about-paragraph { font-size: 1rem; line-height: 1.6; }
+  .about-paragraph {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
 }
 
 /* Respect reduced motion */

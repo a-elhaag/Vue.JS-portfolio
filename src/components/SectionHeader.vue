@@ -58,15 +58,17 @@ onBeforeUnmount(() => {
 
 .header-content {
   background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
-  padding: 0.8rem 1.2rem;
-  font-size: 1rem;
-  font-family: sans-serif;
-  color: var(--text);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 0.9rem 1.4rem;
+  font-size: 1.05rem;
+  font-family: var(--font-heading);
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  color: color-mix(in oklab, var(--text) 88%, var(--glow) 12%);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 /* Fade transition */
 .fade-enter-active,
@@ -83,9 +85,9 @@ onBeforeUnmount(() => {
 }
 
 .section-label {
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: capitalize;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 @keyframes fadeIn {
@@ -102,7 +104,7 @@ onBeforeUnmount(() => {
 /* Responsive adjustments */
 @media (max-width: 600px) {
   .header-content {
-    padding: 0.7rem 1.1rem;
+    padding: 0.75rem 1.15rem;
     font-size: 0.95rem;
   }
 }
