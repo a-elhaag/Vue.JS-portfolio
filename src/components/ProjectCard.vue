@@ -10,12 +10,18 @@ const props = defineProps<{
   variant?: "elevated" | "outline" | "solid" | "glass";
   size?: "sm" | "md" | "lg"; // will default to md
   clamp?: number; // intro clamp lines
+  showRepo?: boolean; // optionally hide repo button (for papers etc.)
+  demoLabel?: string; // custom label for demo button (e.g. Paper)
 }>();
 
 const variant = computed(() => props.variant || "outline");
 const size = computed(() => props.size || "md");
 const clamp = computed(() => props.clamp ?? 4);
 const showDemo = computed(() => !!props.project.links.demo);
+const demoLabel = computed(() => props.demoLabel || "Demo");
+const showRepoButton = computed(
+  () => props.showRepo !== false && !!props.project.links.repo
+);
 const ariaLabel = computed(
   () => `${props.project.title} project${showDemo.value ? " with demo" : ""}`
 );
@@ -49,6 +55,7 @@ const stackDisplay = computed(() => {
     <template #footer>
       <div class="actions">
         <Button
+          v-if="showRepoButton"
           variant="solid"
           size="md"
           :href="project.links.repo"
@@ -68,7 +75,7 @@ const stackDisplay = computed(() => {
           <template #icon>
             <ExternalLink />
           </template>
-          Demo
+          {{ demoLabel }}
         </Button>
       </div>
     </template>
