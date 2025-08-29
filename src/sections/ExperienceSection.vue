@@ -36,6 +36,20 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (observer) observer.disconnect();
 });
+
+function formatEmployment(type?: ExperienceItem["employmentType"]) {
+  if (!type) return "";
+  const map: Record<string, string> = {
+    "full-time": "Full time",
+    "part-time": "Part time",
+    internship: "Internship",
+    contract: "Contract",
+    freelance: "Freelance",
+    "self-employed": "Self employed",
+    volunteer: "Volunteer",
+  };
+  return map[type] || type;
+}
 </script>
 
 <template>
@@ -53,6 +67,7 @@ onBeforeUnmount(() => {
           :key="it.company + it.role + it.period"
           class="entry"
           :class="{ 'is-last': i === items.length - 1 }"
+          :style="{ '--entry-accent': it.accent || 'var(--glow)' }"
         >
           <div class="marker" aria-hidden="true">
             <span class="dot" />
@@ -60,12 +75,12 @@ onBeforeUnmount(() => {
           <Card
             class="exp-card"
             variant="outline"
-            :interactive="false"
+            :interactive="true"
             :accent="it.accent"
             :clamp="4"
             :aria-label="`${it.role} at ${it.company} ${it.period}`"
-            :typeText="'Experience'"
             size="lg"
+            :media-icon="it.companyIcon"
           >
             <template #title>
               <span class="role">{{ it.role }}</span>
@@ -74,6 +89,13 @@ onBeforeUnmount(() => {
             </template>
             <template #subtitle>
               <span class="period">{{ it.period }}</span>
+              <span
+                v-if="it.employmentType"
+                class="etype"
+                :data-type="it.employmentType"
+              >
+                {{ formatEmployment(it.employmentType) }}
+              </span>
               <span v-if="it.location" class="loc"> · {{ it.location }}</span>
             </template>
             <div>
@@ -136,45 +158,25 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
 }
-/* Vertical timeline base + animated overlay */
-.timeline::before,
-.timeline::after {
+/* Uniform per-entry vertical segment */
+.marker::after {
   content: "";
   position: absolute;
-  left: 1.1rem; /* align with center of marker column (roughly half of 2.2rem) */
-  top: 0;
-  bottom: 0;
+  top: calc(var(--dot-size) + 0.2rem);
+  left: 50%;
+  transform: translateX(-50%);
   width: 2px;
-  pointer-events: none;
-}
-.timeline::before {
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--text) 80%, transparent) 0%,
-    color-mix(in srgb, var(--text) 65%, transparent) 100%
+  height: calc(100% - var(--dot-size) - 0.2rem);
+  background: color-mix(
+    in srgb,
+    var(--entry-accent, var(--glow)) 55%,
+    transparent
   );
-  opacity: 0.4;
-}
-.timeline::after {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--glow) 0%, transparent) 0%,
-    color-mix(in srgb, var(--glow) 70%, transparent) 40%,
-    color-mix(in srgb, var(--glow) 0%, transparent) 80%
-  );
-  background-size: 100% 300%;
-  animation: timelineFlow 7s linear infinite;
-  mix-blend-mode: screen;
   opacity: 0.55;
-  filter: blur(0.5px);
+  transition: background 0.45s, opacity 0.45s, box-shadow 0.45s;
 }
-@keyframes timelineFlow {
-  0% {
-    background-position: 0 0%;
-  }
-  100% {
-    background-position: 0 300%;
-  }
+.entry.is-last .marker::after {
+  display: none;
 }
 
 .dot {
@@ -182,20 +184,38 @@ onBeforeUnmount(() => {
   width: var(--dot-size);
   height: var(--dot-size);
   border-radius: 50%;
-  background: #111;
+  background: color-mix(
+    in srgb,
+    var(--entry-accent, var(--glow)) 85%,
+    transparent
+  );
   border: 2px solid var(--bg);
-  box-shadow: 0 0 0 2px #111;
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--entry-accent, var(--glow)) 80%, transparent);
   z-index: 2;
   margin-top: 0.4rem; /* align roughly with card header */
   position: relative;
-  transition: background 0.4s, box-shadow 0.4s, transform 0.4s;
+  transition: background 0.35s, box-shadow 0.35s, transform 0.35s;
 }
 .entry.is-active .dot {
-  background: var(--glow);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--glow) 40%, transparent),
-    0 0 0 6px color-mix(in srgb, var(--glow) 12%, transparent),
-    0 0 14px 2px color-mix(in srgb, var(--glow) 55%, transparent);
+  background: var(--entry-accent, var(--glow));
+  box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--entry-accent, var(--glow)) 55%, transparent),
+    0 0 0 6px
+      color-mix(in srgb, var(--entry-accent, var(--glow)) 22%, transparent),
+    0 0 14px 3px
+      color-mix(in srgb, var(--entry-accent, var(--glow)) 55%, transparent);
   transform: scale(1.08);
+}
+.entry.is-active .marker::after {
+  background: color-mix(
+    in srgb,
+    var(--entry-accent, var(--glow)) 65%,
+    transparent
+  );
+  opacity: 0.85;
+  box-shadow: 0 0 8px 1px
+    color-mix(in srgb, var(--entry-accent, var(--glow)) 55%, transparent);
 }
 
 /* Card sizing override: full width & custom height */
@@ -212,6 +232,7 @@ onBeforeUnmount(() => {
 /* Title styling inside card */
 .exp-card :deep(.title) {
   font-size: 1.05rem;
+  position: relative;
 }
 .role {
   font-weight: 600;
@@ -223,10 +244,49 @@ onBeforeUnmount(() => {
 .company {
   font-weight: 600;
   color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 .period {
   font-size: 0.82rem;
   color: var(--muted);
+}
+.etype {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25ch;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.18rem 0.45rem 0.16rem;
+  margin-left: 0.5rem;
+  border: 1px solid
+    color-mix(in srgb, var(--accent, var(--glow)) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent, var(--glow)) 14%, transparent);
+  border-radius: 999px;
+  color: var(--text);
+  position: relative;
+}
+.etype[data-type="internship"] {
+  background: color-mix(in srgb, var(--glow) 16%, transparent);
+}
+.etype[data-type="volunteer"] {
+  background: color-mix(in srgb, var(--glow) 10%, transparent);
+}
+.etype[data-type="self-employed"] {
+  background: color-mix(in srgb, var(--glow) 20%, transparent);
+}
+.etype[data-type="freelance"] {
+  background: color-mix(in srgb, var(--glow) 12%, transparent);
+}
+.etype[data-type="contract"] {
+  background: color-mix(in srgb, var(--glow) 18%, transparent);
+}
+.etype[data-type="full-time"],
+.etype[data-type="part-time"] {
+  background: color-mix(in srgb, var(--glow) 14%, transparent);
 }
 .loc {
   font-size: 0.78rem;
@@ -235,7 +295,26 @@ onBeforeUnmount(() => {
 
 /* Remove hover raise for non-interactive timeline cards */
 .exp-card :deep(.card.is-interactive:hover) {
-  transform: none;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12),
+    0 0 0 3px
+      color-mix(in srgb, var(--entry-accent, var(--glow)) 28%, transparent);
+}
+/* subtle glow on marker & dot when hovering corresponding card */
+.entry:hover .dot:not(.active) {
+  background: var(--entry-accent, var(--glow));
+  box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--entry-accent, var(--glow)) 55%, transparent),
+    0 0 10px 2px
+      color-mix(in srgb, var(--entry-accent, var(--glow)) 55%, transparent);
+}
+.entry:hover .marker::after:not(.is-last) {
+  background: color-mix(
+    in srgb,
+    var(--entry-accent, var(--glow)) 65%,
+    transparent
+  );
+  opacity: 0.9;
 }
 
 /* Body text clamp already handled; ensure good spacing */
