@@ -1,11 +1,7 @@
-I’m Anas — a software engineering student and certified AI engineer who builds systems that feel ==human-centric==. My stack: Vue 3 + TypeScript up front, FastAPI + Azure on the back. I prefer lean systems that don’t collapse under their own weight.
+I’m a **Software Engineer** who’s kinda obsessed with coding. I just **wanna** build cool stuff—whether it’s **web and mobile apps**, **AI backends**, or **cloud systems** that actually scale.
 
-Over the past year I’ve led products under **Hexal Labs**—**Melo** (AI diet planner, second place) and **Inkr** (notes with memory). Serverless backbones, embeddings, and vector search that ship fast and scale honestly.
+I’m also into the community side of things—I’m a **Gold Microsoft Student Ambassador** and the **founder of the Microsoft Student Club – ECU**. I’ve done **workshops**, **talks**, and even a whole **Machine Learning 101 series**. Teaching and sharing feels just as fun as coding itself.
 
-I care about **principles more than buzzwords**. Ship less, ship faster. Favor clarity over cleverness. Measure reality, don’t guess. Keep latency and accessibility on the same line as features.
+But honestly, what keeps me going is the vibe of it all: those **late-night coding sessions**, trying out weird ideas, breaking stuff, fixing it, and then watching it actually work. For me, **software isn’t just a career—it’s my favorite hobby**. I don’t get bored of it; if anything, I just wanna dive deeper, explore more, and keep pushing myself.
 
-Community matters. I founded **Code101** so students move from tutorials to shipping. As a Microsoft Student Ambassador, I break down Azure AI and LangChain so others can build—fewer slides, more demos.
-
-Beyond engineering, I keep **rituals**: gym three times a week, horse riding for focus, car tinkering for patience. They’re feedback loops that make the hard parts easier.
-
-My guiding line: when the work is honest, the outcome feels ==inevitable==. Build, measure, iterate—and then quietly do it again tomorrow.
+At the end of the day, I’m all about taking messy, complicated problems and turning them into **human‑centric solutions** that actually make sense. That’s what makes me excited to keep doing this every day.
