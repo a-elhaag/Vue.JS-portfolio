@@ -97,7 +97,7 @@ const socials = computed(() => {
   justify-content: center;
 }
 .welcome-content {
-  width: min(900px, 96vw);
+  width: min(var(--section-max), 96vw);
   display: flex;
   flex-direction: column;
   align-items: center;

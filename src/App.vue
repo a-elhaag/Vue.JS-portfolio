@@ -5,6 +5,7 @@ import CertsSection from "./sections/CertsSection.vue";
 import AboutSection from "./sections/AboutSection.vue";
 import ProjectsSection from "./sections/ProjectsSection.vue";
 import ExperienceSection from "./sections/ExperienceSection.vue";
+import SiteFooter from "./components/SiteFooter.vue";
 </script>
 
 <template>
@@ -15,5 +16,6 @@ import ExperienceSection from "./sections/ExperienceSection.vue";
     <AboutSection />
     <ProjectsSection />
     <ExperienceSection />
+    <SiteFooter />
   </main>
 </template>

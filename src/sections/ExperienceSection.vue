@@ -117,7 +117,7 @@ function formatEmployment(type?: ExperienceItem["employmentType"]) {
   padding: 40px 0 24px;
 }
 .container {
-  width: min(900px, 96vw);
+  width: min(var(--section-max), 96vw);
   display: flex;
   flex-direction: column;
   gap: 20px;

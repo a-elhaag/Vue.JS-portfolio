@@ -150,12 +150,14 @@ onBeforeUnmount(() => {
   color: var(--text);
   padding: 56px 0;
   font-family: var(--font-heading);
+  /* Make about text use full section width unless capped below */
+  --reading-width: 100%;
 }
 
 /* Wrapper with perspective for 3D animation */
 .about-wheel-wrap {
   position: relative;
-  width: min(1000px, 96vw); /* widened to match other sections */
+  width: min(var(--section-max), 96vw);
   padding-inline: 1rem;
   perspective: 950px;
   perspective-origin: center 42%;
@@ -175,11 +177,11 @@ onBeforeUnmount(() => {
   transition: transform 0.1s linear, opacity 0.1s linear, filter 0.1s linear;
   font-size: 1.05rem;
   line-height: 1.65;
-  max-width: 68ch;
+  max-width: var(--reading-width);
   margin: 0 auto;
-  color: var(--text); /* Consistent color - no changing */
-  opacity: 0.95; /* Consistent opacity base */
-  display: block; /* Ensure each line is a block element */
+  color: var(--text);
+  opacity: 0.95;
+  display: block;
 }
 
 /* Static blocks (headings/lists) */

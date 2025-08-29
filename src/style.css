@@ -19,6 +19,10 @@ h6 {
   --font-body: "Inter", system-ui, sans-serif;
   --font-heading: "JetBrains Mono", "Fira Mono", "Menlo", "Consolas",
     "Liberation Mono", "Courier New", monospace;
+  /* Unified max content width for primary sections */
+  --section-max: 1000px;
+  /* Max line width for long-form text blocks (About section) */
+  --reading-width: 72ch;
 }
 
 * {
