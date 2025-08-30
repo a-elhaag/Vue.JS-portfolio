@@ -7,6 +7,7 @@ import ProjectsSection from "./sections/ProjectsSection.vue";
 import ResearchPapersSection from "./sections/ResearchPapersSection.vue";
 import ExperienceSection from "./sections/ExperienceSection.vue";
 import SiteFooter from "./components/SiteFooter.vue";
+import AiChatDemo from "./components/AiChatDemo.vue";
 </script>
 
 <template>
@@ -19,5 +20,8 @@ import SiteFooter from "./components/SiteFooter.vue";
     <ExperienceSection />
     <ResearchPapersSection />
     <SiteFooter />
+
+    <!-- AI Chat Demo -->
+    <AiChatDemo />
   </main>
 </template>
